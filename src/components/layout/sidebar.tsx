@@ -1,0 +1,133 @@
+'use client'
+
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
+import { cn } from '@/lib/utils'
+import {
+  LayoutDashboard,
+  FileText,
+  Package,
+  Tags,
+  FolderTree,
+  Users,
+  BarChart3,
+  Settings,
+  LogOut,
+} from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { createClient } from '@/lib/supabase/client'
+import { useRouter } from 'next/navigation'
+
+interface SidebarProps {
+  userRole: 'admin' | 'user'
+}
+
+const menuItems = [
+  {
+    title: 'Dashboard',
+    href: '/dashboard',
+    icon: LayoutDashboard,
+    adminOnly: false,
+  },
+  {
+    title: 'Invoices',
+    href: '/dashboard/invoices',
+    icon: FileText,
+    adminOnly: false,
+  },
+  {
+    title: 'Products',
+    href: '/dashboard/products',
+    icon: Package,
+    adminOnly: true,
+  },
+  {
+    title: 'Brands',
+    href: '/dashboard/brands',
+    icon: Tags,
+    adminOnly: true,
+  },
+  {
+    title: 'Categories',
+    href: '/dashboard/categories',
+    icon: FolderTree,
+    adminOnly: true,
+  },
+  {
+    title: 'Users',
+    href: '/dashboard/users',
+    icon: Users,
+    adminOnly: true,
+  },
+  {
+    title: 'Reports',
+    href: '/dashboard/reports',
+    icon: BarChart3,
+    adminOnly: true,
+  },
+  {
+    title: 'Settings',
+    href: '/dashboard/settings',
+    icon: Settings,
+    adminOnly: false,
+  },
+]
+
+export function Sidebar({ userRole }: SidebarProps) {
+  const pathname = usePathname()
+  const router = useRouter()
+  const supabase = createClient()
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    router.push('/login')
+    router.refresh()
+  }
+
+  const filteredMenuItems = menuItems.filter(
+    (item) => !item.adminOnly || userRole === 'admin'
+  )
+
+  return (
+    <aside className="flex h-screen w-64 flex-col border-r bg-card">
+      <div className="flex h-16 items-center border-b px-6">
+        <Link href="/dashboard" className="flex items-center gap-2">
+          <FileText className="h-6 w-6 text-primary" />
+          <span className="text-lg font-bold">Invoice App</span>
+        </Link>
+      </div>
+
+      <nav className="flex-1 space-y-1 p-4">
+        {filteredMenuItems.map((item) => {
+          const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={cn(
+                'flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                isActive
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+              )}
+            >
+              <item.icon className="h-4 w-4" />
+              {item.title}
+            </Link>
+          )
+        })}
+      </nav>
+
+      <div className="border-t p-4">
+        <Button
+          variant="ghost"
+          className="w-full justify-start gap-3 text-muted-foreground hover:text-destructive"
+          onClick={handleLogout}
+        >
+          <LogOut className="h-4 w-4" />
+          Logout
+        </Button>
+      </div>
+    </aside>
+  )
+}
