@@ -63,7 +63,7 @@ export default async function ViewInvoicePage({
         </div>
         <div className="flex gap-2">
           <Button variant="outline" asChild>
-            <Link href={`/dashboard/invoices/${id}/print`}>
+            <Link href={`/invoice/${id}`} target="_blank">
               <Printer className="mr-2 h-4 w-4" /> Print
             </Link>
           </Button>

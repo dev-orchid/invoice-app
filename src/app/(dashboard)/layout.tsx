@@ -1,7 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { Sidebar } from '@/components/layout/sidebar'
-import { Header } from '@/components/layout/header'
+import { DashboardShell } from '@/components/layout/dashboard-shell'
 import { Toaster } from '@/components/ui/sonner'
 
 export default async function DashboardLayout({
@@ -30,15 +29,11 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      <Sidebar userRole={profile.role} />
-      <div className="flex flex-1 flex-col overflow-hidden">
-        <Header user={profile} />
-        <main className="flex-1 overflow-y-auto bg-muted/30 p-6">
-          {children}
-        </main>
-      </div>
+    <>
+      <DashboardShell user={profile}>
+        {children}
+      </DashboardShell>
       <Toaster />
-    </div>
+    </>
   )
 }

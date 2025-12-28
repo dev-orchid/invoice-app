@@ -42,8 +42,8 @@ export function Header({ user, onMenuClick }: HeaderProps) {
     .slice(0, 2)
 
   return (
-    <header className="flex h-16 items-center justify-between border-b bg-card px-6">
-      <div className="flex items-center gap-4">
+    <header className="flex h-14 items-center justify-between border-b bg-card px-4 md:h-16 md:px-6">
+      <div className="flex items-center gap-3">
         <Button
           variant="ghost"
           size="icon"
@@ -52,15 +52,18 @@ export function Header({ user, onMenuClick }: HeaderProps) {
         >
           <Menu className="h-5 w-5" />
         </Button>
-        <h1 className="text-lg font-semibold">Sipahi Jee Metal Works</h1>
+        <h1 className="text-sm font-semibold md:text-lg">
+          <span className="hidden sm:inline">Sipahi Jee Metal Works</span>
+          <span className="sm:hidden">SJMW</span>
+        </h1>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 md:gap-4">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-              <Avatar className="h-10 w-10">
-                <AvatarFallback>{initials}</AvatarFallback>
+            <Button variant="ghost" className="relative h-8 w-8 rounded-full md:h-10 md:w-10">
+              <Avatar className="h-8 w-8 md:h-10 md:w-10">
+                <AvatarFallback className="text-xs md:text-sm">{initials}</AvatarFallback>
               </Avatar>
             </Button>
           </DropdownMenuTrigger>

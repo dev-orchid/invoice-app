@@ -64,25 +64,25 @@ export default async function DashboardPage() {
   ]
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight">Dashboard</h2>
-        <p className="text-muted-foreground">
+        <h2 className="text-xl font-bold tracking-tight md:text-2xl">Dashboard</h2>
+        <p className="text-sm text-muted-foreground md:text-base">
           Welcome back! Here&apos;s an overview of your business.
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
         {stats.map((stat) => (
           <Card key={stat.title}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-              <div className={`rounded-full p-2 ${stat.bgColor}`}>
-                <stat.icon className={`h-4 w-4 ${stat.color}`} />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1 md:p-6 md:pb-2">
+              <CardTitle className="text-xs font-medium md:text-sm">{stat.title}</CardTitle>
+              <div className={`rounded-full p-1.5 md:p-2 ${stat.bgColor}`}>
+                <stat.icon className={`h-3 w-3 md:h-4 md:w-4 ${stat.color}`} />
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
+            <CardContent className="p-3 pt-0 md:p-6 md:pt-0">
+              <div className="text-lg font-bold md:text-2xl">{stat.value}</div>
             </CardContent>
           </Card>
         ))}

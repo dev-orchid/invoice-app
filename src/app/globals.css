@@ -122,4 +122,21 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* iOS input fixes */
+  input, textarea, select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    font-size: 16px; /* Prevents iOS zoom on focus */
+  }
+
+  /* Ensure touch events work properly */
+  input:not([disabled]),
+  textarea:not([disabled]),
+  select:not([disabled]) {
+    -webkit-user-select: text;
+    user-select: text;
+    touch-action: manipulation;
+  }
 }

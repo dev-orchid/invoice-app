@@ -135,11 +135,11 @@ export function InvoiceForm({ initialData }: InvoiceFormProps) {
   }
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 md:space-y-6">
       {/* Client Details */}
       <Card>
-        <CardHeader>
-          <CardTitle>Client Details</CardTitle>
+        <CardHeader className="pb-3 md:pb-6">
+          <CardTitle className="text-lg md:text-xl">Client Details</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div className="space-y-2">
@@ -176,81 +176,86 @@ export function InvoiceForm({ initialData }: InvoiceFormProps) {
 
       {/* Line Items */}
       <Card>
-        <CardHeader>
-          <CardTitle>Invoice Items</CardTitle>
+        <CardHeader className="pb-3 md:pb-6">
+          <CardTitle className="text-lg md:text-xl">Invoice Items</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b text-left text-sm font-medium text-muted-foreground">
-                  <th className="p-2">Description</th>
-                  <th className="p-2">HSN/SAC</th>
-                  <th className="p-2 w-24">Rate</th>
-                  <th className="p-2 w-20">Qty</th>
-                  <th className="p-2 w-20">Unit</th>
-                  <th className="p-2 w-28 text-right">Amount</th>
-                  <th className="p-2 w-12"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {fields.map((field, index) => (
-                  <tr key={field.id} className="border-b">
-                    <td className="p-2">
-                      <Input
-                        {...form.register(`items.${index}.product_name`)}
-                        placeholder="Product name"
-                      />
-                    </td>
-                    <td className="p-2">
-                      <Input
-                        {...form.register(`items.${index}.hsn_code`)}
-                        placeholder="HSN"
-                      />
-                    </td>
-                    <td className="p-2">
-                      <Input
-                        type="number"
-                        step="0.01"
-                        {...form.register(`items.${index}.rate`, { valueAsNumber: true })}
-                      />
-                    </td>
-                    <td className="p-2">
-                      <Input
-                        type="number"
-                        step="0.01"
-                        {...form.register(`items.${index}.quantity`, { valueAsNumber: true })}
-                      />
-                    </td>
-                    <td className="p-2">
-                      <Input {...form.register(`items.${index}.unit`)} />
-                    </td>
-                    <td className="p-2 text-right font-medium">
-                      {(
-                        (watchItems[index]?.rate || 0) * (watchItems[index]?.quantity || 0)
-                      ).toFixed(2)}
-                    </td>
-                    <td className="p-2">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => remove(index)}
-                        disabled={fields.length === 1}
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        <CardContent className="space-y-4">
+          {fields.map((field, index) => (
+            <div key={field.id} className="border rounded-lg p-4 space-y-3 bg-muted/30">
+              <div className="flex justify-between items-start">
+                <span className="text-sm font-medium text-muted-foreground">Item {index + 1}</span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => remove(index)}
+                  disabled={fields.length === 1}
+                  className="text-destructive hover:text-destructive h-8 w-8 p-0"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label className="text-sm">Product Name</Label>
+                  <Input
+                    {...form.register(`items.${index}.product_name`)}
+                    placeholder="Enter product name"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-sm">HSN/SAC Code</Label>
+                  <Input
+                    {...form.register(`items.${index}.hsn_code`)}
+                    placeholder="Enter HSN code"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div className="space-y-2">
+                  <Label className="text-sm">Rate</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    inputMode="decimal"
+                    {...form.register(`items.${index}.rate`, { valueAsNumber: true })}
+                    placeholder="0"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-sm">Quantity</Label>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    inputMode="decimal"
+                    {...form.register(`items.${index}.quantity`, { valueAsNumber: true })}
+                    placeholder="1"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-sm">Unit</Label>
+                  <Input
+                    {...form.register(`items.${index}.unit`)}
+                    placeholder="KGS"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-between items-center pt-2 border-t">
+                <span className="text-sm text-muted-foreground">Amount:</span>
+                <span className="font-semibold text-lg">
+                  Rs. {((watchItems[index]?.rate || 0) * (watchItems[index]?.quantity || 0)).toFixed(2)}
+                </span>
+              </div>
+            </div>
+          ))}
+
           <Button
             type="button"
             variant="outline"
-            className="mt-4"
+            className="w-full"
             onClick={() =>
               append({ product_name: '', hsn_code: '', rate: 0, quantity: 1, unit: 'KGS' })
             }
@@ -261,10 +266,10 @@ export function InvoiceForm({ initialData }: InvoiceFormProps) {
       </Card>
 
       {/* Payment and Summary */}
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-4 md:gap-6 md:grid-cols-2">
         <Card>
-          <CardHeader>
-            <CardTitle>Payment Details</CardTitle>
+          <CardHeader className="pb-3 md:pb-6">
+            <CardTitle className="text-lg md:text-xl">Payment Details</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -272,6 +277,7 @@ export function InvoiceForm({ initialData }: InvoiceFormProps) {
               <Input
                 type="number"
                 step="0.01"
+                inputMode="decimal"
                 {...form.register('discount', { valueAsNumber: true })}
               />
             </div>
@@ -280,6 +286,7 @@ export function InvoiceForm({ initialData }: InvoiceFormProps) {
               <Input
                 type="number"
                 step="0.01"
+                inputMode="decimal"
                 {...form.register('paid_amount', { valueAsNumber: true })}
               />
             </div>
@@ -343,8 +350,8 @@ export function InvoiceForm({ initialData }: InvoiceFormProps) {
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Summary</CardTitle>
+          <CardHeader className="pb-3 md:pb-6">
+            <CardTitle className="text-lg md:text-xl">Summary</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex justify-between">
@@ -379,12 +386,12 @@ export function InvoiceForm({ initialData }: InvoiceFormProps) {
         </Card>
       </div>
 
-      <div className="flex gap-4">
-        <Button type="submit" disabled={isSubmitting}>
+      <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
+        <Button type="submit" disabled={isSubmitting} className="w-full sm:w-auto">
           {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {initialData ? 'Update Invoice' : 'Create Invoice'}
         </Button>
-        <Button type="button" variant="outline" onClick={() => router.back()}>
+        <Button type="button" variant="outline" onClick={() => router.back()} className="w-full sm:w-auto">
           Cancel
         </Button>
       </div>
