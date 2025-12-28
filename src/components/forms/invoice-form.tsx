@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
@@ -57,6 +57,14 @@ interface InvoiceFormProps {
 export function InvoiceForm({ initialData }: InvoiceFormProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
 
   const form = useForm<InvoiceFormData>({
     resolver: zodResolver(invoiceSchema),
@@ -188,170 +196,169 @@ export function InvoiceForm({ initialData }: InvoiceFormProps) {
           <CardTitle className="text-lg md:text-xl">Invoice Items</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Mobile card view */}
-          <div className="block md:hidden space-y-3">
-            {fields.map((field, index) => (
-              <div key={field.id} className="border rounded-lg p-4 space-y-3 bg-muted/30 relative">
-                <div className="flex justify-between items-start">
-                  <span className="text-sm font-medium text-muted-foreground">Item {index + 1}</span>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => remove(index)}
-                    disabled={fields.length === 1}
-                    className="text-destructive hover:text-destructive h-8 w-8 p-0"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
+          {/* Conditional rendering - only one view at a time to avoid duplicate form registrations */}
+          {isMobile ? (
+            /* Mobile view - stacked cards */
+            <div className="space-y-4">
+              {fields.map((field, index) => (
+                <div key={field.id} className="border rounded-lg p-4 bg-background">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-semibold text-muted-foreground">Item {index + 1}</span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => remove(index)}
+                      disabled={fields.length === 1}
+                      className="text-destructive hover:text-destructive h-8 w-8 p-0"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
 
-                <div className="space-y-3">
-                  <div className="space-y-2">
-                    <Label className="text-sm">Product Name</Label>
-                    <Input
-                      {...form.register(`items.${index}.product_name`)}
-                      placeholder="Enter product name"
-                      className="relative z-10"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-sm">HSN/SAC Code</Label>
-                    <Input
-                      {...form.register(`items.${index}.hsn_code`)}
-                      placeholder="Enter HSN code"
-                      autoComplete="off"
-                      autoCorrect="off"
-                      className="relative z-10"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="space-y-2">
-                    <Label className="text-sm">Rate</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      inputMode="decimal"
-                      {...form.register(`items.${index}.rate`, { valueAsNumber: true })}
-                      placeholder="0"
-                      className="relative z-10"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-sm">Qty</Label>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      inputMode="decimal"
-                      {...form.register(`items.${index}.quantity`, { valueAsNumber: true })}
-                      placeholder="1"
-                      className="relative z-10"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-sm">Unit</Label>
-                    <Input
-                      {...form.register(`items.${index}.unit`)}
-                      placeholder="KGS"
-                      className="relative z-10"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex justify-between items-center pt-2 border-t">
-                  <span className="text-sm text-muted-foreground">Amount:</span>
-                  <span className="font-semibold text-lg">
-                    Rs. {((watchItems[index]?.rate || 0) * (watchItems[index]?.quantity || 0)).toFixed(2)}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Desktop table view */}
-          <div className="hidden md:block overflow-x-auto border rounded-lg">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[40px]">#</TableHead>
-                  <TableHead className="min-w-[200px]">Product Name</TableHead>
-                  <TableHead className="w-[120px]">HSN Code</TableHead>
-                  <TableHead className="w-[100px]">Rate</TableHead>
-                  <TableHead className="w-[100px]">Qty</TableHead>
-                  <TableHead className="w-[80px]">Unit</TableHead>
-                  <TableHead className="w-[120px] text-right">Amount</TableHead>
-                  <TableHead className="w-[50px]"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {fields.map((field, index) => (
-                  <TableRow key={field.id}>
-                    <TableCell className="font-medium text-muted-foreground">
-                      {index + 1}
-                    </TableCell>
-                    <TableCell>
+                  <div className="space-y-4">
+                    <div>
+                      <Label className="text-xs text-muted-foreground mb-1 block">Product Name</Label>
                       <Input
                         {...form.register(`items.${index}.product_name`)}
-                        placeholder="Product name"
-                        className="h-9"
+                        placeholder="Enter product name"
                       />
-                    </TableCell>
-                    <TableCell>
+                    </div>
+
+                    <div>
+                      <Label className="text-xs text-muted-foreground mb-1 block">HSN/SAC Code</Label>
                       <Input
                         {...form.register(`items.${index}.hsn_code`)}
-                        placeholder="HSN"
-                        className="h-9"
+                        placeholder="Enter HSN code"
                         autoComplete="off"
-                        autoCorrect="off"
                       />
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        {...form.register(`items.${index}.rate`, { valueAsNumber: true })}
-                        placeholder="0"
-                        className="h-9"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        {...form.register(`items.${index}.quantity`, { valueAsNumber: true })}
-                        placeholder="1"
-                        className="h-9"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        {...form.register(`items.${index}.unit`)}
-                        placeholder="KGS"
-                        className="h-9"
-                      />
-                    </TableCell>
-                    <TableCell className="text-right font-medium">
-                      Rs. {((watchItems[index]?.rate || 0) * (watchItems[index]?.quantity || 0)).toFixed(2)}
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => remove(index)}
-                        disabled={fields.length === 1}
-                        className="text-destructive hover:text-destructive h-8 w-8"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-2">
+                      <div>
+                        <Label className="text-xs text-muted-foreground mb-1 block">Rate</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          inputMode="decimal"
+                          {...form.register(`items.${index}.rate`, { valueAsNumber: true })}
+                          placeholder="0"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground mb-1 block">Qty</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          inputMode="decimal"
+                          {...form.register(`items.${index}.quantity`, { valueAsNumber: true })}
+                          placeholder="1"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground mb-1 block">Unit</Label>
+                        <Input
+                          {...form.register(`items.${index}.unit`)}
+                          placeholder="KGS"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex justify-between items-center pt-3 border-t bg-muted/30 -mx-4 px-4 -mb-4 pb-3 rounded-b-lg">
+                      <span className="text-sm text-muted-foreground">Amount</span>
+                      <span className="text-lg font-bold">
+                        Rs. {((watchItems[index]?.rate || 0) * (watchItems[index]?.quantity || 0)).toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            /* Desktop view - table */
+            <div className="overflow-x-auto border rounded-lg">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[40px]">#</TableHead>
+                    <TableHead className="min-w-[200px]">Product Name</TableHead>
+                    <TableHead className="w-[120px]">HSN Code</TableHead>
+                    <TableHead className="w-[100px]">Rate</TableHead>
+                    <TableHead className="w-[100px]">Qty</TableHead>
+                    <TableHead className="w-[80px]">Unit</TableHead>
+                    <TableHead className="w-[120px] text-right">Amount</TableHead>
+                    <TableHead className="w-[50px]"></TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                </TableHeader>
+                <TableBody>
+                  {fields.map((field, index) => (
+                    <TableRow key={field.id}>
+                      <TableCell className="font-medium text-muted-foreground">
+                        {index + 1}
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          {...form.register(`items.${index}.product_name`)}
+                          placeholder="Product name"
+                          className="h-9"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          {...form.register(`items.${index}.hsn_code`)}
+                          placeholder="HSN"
+                          className="h-9"
+                          autoComplete="off"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          inputMode="decimal"
+                          {...form.register(`items.${index}.rate`, { valueAsNumber: true })}
+                          placeholder="0"
+                          className="h-9"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          inputMode="decimal"
+                          {...form.register(`items.${index}.quantity`, { valueAsNumber: true })}
+                          placeholder="1"
+                          className="h-9"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Input
+                          {...form.register(`items.${index}.unit`)}
+                          placeholder="KGS"
+                          className="h-9"
+                        />
+                      </TableCell>
+                      <TableCell className="text-right font-medium">
+                        Rs. {((watchItems[index]?.rate || 0) * (watchItems[index]?.quantity || 0)).toFixed(2)}
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => remove(index)}
+                          disabled={fields.length === 1}
+                          className="text-destructive hover:text-destructive h-8 w-8"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
 
           <Button
             type="button"

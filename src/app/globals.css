@@ -126,10 +126,13 @@
     @apply border-border outline-ring/50;
   }
   html {
-    @apply h-full;
+    height: 100%;
+    overflow: hidden;
   }
   body {
-    @apply h-full bg-background text-foreground;
+    height: 100%;
+    overflow: hidden;
+    @apply bg-background text-foreground;
   }
 
   /* iOS input fixes */
