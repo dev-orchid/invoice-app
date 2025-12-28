@@ -116,6 +116,28 @@ CREATE TABLE IF NOT EXISTS public.invoice_items (
 );
 
 -- =============================================
+-- COMPANY SETTINGS TABLE (singleton)
+-- =============================================
+CREATE TABLE IF NOT EXISTS public.company_settings (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    company_name VARCHAR(255) NOT NULL DEFAULT 'Sipahi Jee Metal Works',
+    gstin VARCHAR(50) NOT NULL DEFAULT '10CEKPP9425G1ZG',
+    address TEXT NOT NULL DEFAULT 'NEW ATWARPUR KURTHAUL, Parsa Bazar, Patna, Bihar, 804453',
+    phone VARCHAR(20),
+    email VARCHAR(255),
+    bank_name VARCHAR(255),
+    account_number VARCHAR(50),
+    ifsc_code VARCHAR(20),
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Insert default company settings
+INSERT INTO public.company_settings (company_name, gstin, address)
+VALUES ('Sipahi Jee Metal Works', '10CEKPP9425G1ZG', 'NEW ATWARPUR KURTHAUL, Parsa Bazar, Patna, Bihar, 804453')
+ON CONFLICT DO NOTHING;
+
+-- =============================================
 -- INDEXES FOR PERFORMANCE
 -- =============================================
 CREATE INDEX IF NOT EXISTS idx_invoices_date ON public.invoices(invoice_date);
@@ -136,6 +158,7 @@ ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.invoices ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.invoice_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.company_settings ENABLE ROW LEVEL SECURITY;
 
 -- Profiles policies
 CREATE POLICY "Users can view all profiles" ON public.profiles FOR SELECT USING (true);
@@ -204,6 +227,28 @@ CREATE POLICY "Users can delete invoice items" ON public.invoice_items FOR DELET
         AND (invoices.created_by = auth.uid() OR EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'))
     ));
 
+-- Company Settings policies
+CREATE POLICY "Anyone can view company settings" ON public.company_settings FOR SELECT USING (true);
+CREATE POLICY "Admin can update company settings" ON public.company_settings FOR UPDATE
+    USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
+CREATE POLICY "Admin can insert company settings" ON public.company_settings FOR INSERT
+    WITH CHECK (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
+
+-- =============================================
+-- STORAGE BUCKET FOR PRODUCT IMAGES
+-- =============================================
+-- Note: Run this in the Supabase Dashboard SQL Editor or use the Supabase Storage UI
+-- INSERT INTO storage.buckets (id, name, public) VALUES ('products', 'products', true);
+
+-- Storage policies (run in Supabase Dashboard)
+-- CREATE POLICY "Public read access for product images" ON storage.objects FOR SELECT USING (bucket_id = 'products');
+-- CREATE POLICY "Admin can upload product images" ON storage.objects FOR INSERT WITH CHECK (
+--     bucket_id = 'products' AND EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
+-- );
+-- CREATE POLICY "Admin can delete product images" ON storage.objects FOR DELETE USING (
+--     bucket_id = 'products' AND EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
+-- );
+
 -- =============================================
 -- FUNCTIONS AND TRIGGERS
 -- =============================================
@@ -256,6 +301,10 @@ CREATE TRIGGER update_products_updated_at BEFORE UPDATE ON public.products
 
 DROP TRIGGER IF EXISTS update_invoices_updated_at ON public.invoices;
 CREATE TRIGGER update_invoices_updated_at BEFORE UPDATE ON public.invoices
+    FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_company_settings_updated_at ON public.company_settings;
+CREATE TRIGGER update_company_settings_updated_at BEFORE UPDATE ON public.company_settings
     FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
 -- Calculate GST amounts on invoice save

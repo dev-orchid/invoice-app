@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/table'
 import { Plus, Pencil } from 'lucide-react'
 import { DeleteButton } from '@/components/common/delete-button'
+import { BulkImportDialog } from '@/components/forms/bulk-import-dialog'
 import { deleteBrand } from '@/actions/brands'
 
 export default async function BrandsPage() {
@@ -46,11 +47,14 @@ export default async function BrandsPage() {
           <h2 className="text-2xl font-bold tracking-tight">Brands</h2>
           <p className="text-muted-foreground">Manage product brands.</p>
         </div>
-        <Button asChild>
-          <Link href="/dashboard/brands/new">
-            <Plus className="mr-2 h-4 w-4" /> Add Brand
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          <BulkImportDialog type="brands" />
+          <Button asChild>
+            <Link href="/dashboard/brands/new">
+              <Plus className="mr-2 h-4 w-4" /> Add Brand
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <Card>

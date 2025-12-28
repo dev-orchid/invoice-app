@@ -11,6 +11,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { format } from 'date-fns'
+import { UserManagementClient } from './user-management-client'
 
 export default async function UsersPage() {
   const supabase = await createClient()
@@ -36,9 +37,12 @@ export default async function UsersPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight">Users</h2>
-        <p className="text-muted-foreground">Manage user accounts.</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Users</h2>
+          <p className="text-muted-foreground">Manage user accounts.</p>
+        </div>
+        <UserManagementClient users={users || []} currentUserId={user.id} />
       </div>
 
       <Card>
@@ -54,6 +58,7 @@ export default async function UsersPage() {
                   <TableHead>Email</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Joined</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -70,6 +75,14 @@ export default async function UsersPage() {
                     </TableCell>
                     <TableCell>
                       {format(new Date(u.created_at), 'dd MMM yyyy')}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <UserManagementClient
+                        users={users}
+                        currentUserId={user.id}
+                        editUser={u}
+                        isInline
+                      />
                     </TableCell>
                   </TableRow>
                 ))}

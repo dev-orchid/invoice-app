@@ -17,12 +17,14 @@ import {
 } from '@/components/ui/select'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Switch } from '@/components/ui/switch'
+import { ImageUpload } from '@/components/ui/image-upload'
 import { Loader2 } from 'lucide-react'
 import { createProduct, updateProduct } from '@/actions/products'
 import { toast } from 'sonner'
 
 const productSchema = z.object({
   name: z.string().min(1, 'Product name is required'),
+  image_url: z.string().nullable().optional(),
   brand_id: z.string().optional().nullable(),
   category_id: z.string().optional().nullable(),
   quantity: z.number().int().min(0),
@@ -40,6 +42,7 @@ interface ProductFormProps {
   initialData?: {
     id: string
     name: string
+    image_url: string | null
     brand_id: string | null
     category_id: string | null
     quantity: number
@@ -59,6 +62,7 @@ export function ProductForm({ brands, categories, initialData }: ProductFormProp
     defaultValues: initialData
       ? {
           name: initialData.name,
+          image_url: initialData.image_url,
           brand_id: initialData.brand_id,
           category_id: initialData.category_id,
           quantity: initialData.quantity,
@@ -69,6 +73,7 @@ export function ProductForm({ brands, categories, initialData }: ProductFormProp
         }
       : {
           name: '',
+          image_url: null,
           brand_id: null,
           category_id: null,
           quantity: 0,
@@ -205,6 +210,14 @@ export function ProductForm({ brands, categories, initialData }: ProductFormProp
               />
               <Label htmlFor="is_active">Active</Label>
             </div>
+          </div>
+
+          <div className="space-y-2 pt-4 border-t">
+            <Label>Product Image</Label>
+            <ImageUpload
+              value={form.watch('image_url')}
+              onChange={(url) => form.setValue('image_url', url)}
+            />
           </div>
 
           <div className="flex gap-4 pt-4">

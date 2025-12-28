@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/table'
 import { Plus, Pencil } from 'lucide-react'
 import { DeleteButton } from '@/components/common/delete-button'
+import { BulkImportDialog } from '@/components/forms/bulk-import-dialog'
 import { deleteCategory } from '@/actions/categories'
 
 export default async function CategoriesPage() {
@@ -46,11 +47,14 @@ export default async function CategoriesPage() {
           <h2 className="text-2xl font-bold tracking-tight">Categories</h2>
           <p className="text-muted-foreground">Manage product categories.</p>
         </div>
-        <Button asChild>
-          <Link href="/dashboard/categories/new">
-            <Plus className="mr-2 h-4 w-4" /> Add Category
-          </Link>
-        </Button>
+        <div className="flex gap-2">
+          <BulkImportDialog type="categories" />
+          <Button asChild>
+            <Link href="/dashboard/categories/new">
+              <Plus className="mr-2 h-4 w-4" /> Add Category
+            </Link>
+          </Button>
+        </div>
       </div>
 
       <Card>
