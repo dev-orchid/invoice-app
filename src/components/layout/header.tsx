@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Menu, User, Settings, LogOut } from 'lucide-react'
+import { Menu, User, Settings, LogOut, ChevronDown } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
@@ -61,10 +61,16 @@ export function Header({ user, onMenuClick }: HeaderProps) {
       <div className="flex items-center gap-2 md:gap-4">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-8 w-8 rounded-full md:h-10 md:w-10">
-              <Avatar className="h-8 w-8 md:h-10 md:w-10">
-                <AvatarFallback className="text-xs md:text-sm">{initials}</AvatarFallback>
+            <Button variant="ghost" className="flex items-center gap-2 px-2 md:px-3">
+              <span className="hidden text-sm font-medium sm:inline-block">
+                {user.username}
+              </span>
+              <Avatar className="h-8 w-8 bg-primary">
+                <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                  {initials}
+                </AvatarFallback>
               </Avatar>
+              <ChevronDown className="hidden h-4 w-4 text-muted-foreground sm:inline-block" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
