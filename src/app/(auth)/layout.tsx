@@ -11,7 +11,7 @@ export default function AuthLayout({
       {/* Left side - Banner Image */}
       <div className="hidden lg:block lg:w-1/2 relative">
         <Image
-          src="/banner-invoice.jpg"
+          src="/banner-invoice-gst.webp"
           alt="Invoice App Banner"
           fill
           className="object-cover"
