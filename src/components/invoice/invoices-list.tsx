@@ -20,7 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Eye, Pencil, Printer, Search, X } from 'lucide-react'
+import { Eye, Pencil, Printer, Search, X, ChevronLeft, ChevronRight } from 'lucide-react'
 import { format } from 'date-fns'
 import { DeleteInvoiceButton } from '@/components/invoice/delete-invoice-button'
 
@@ -40,9 +40,12 @@ interface InvoicesListProps {
   invoices: Invoice[]
 }
 
+const ITEMS_PER_PAGE = 25
+
 export function InvoicesList({ invoices }: InvoicesListProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [currentPage, setCurrentPage] = useState(1)
 
   const filteredInvoices = useMemo(() => {
     return invoices.filter((invoice) => {
@@ -59,6 +62,17 @@ export function InvoicesList({ invoices }: InvoicesListProps) {
     })
   }, [invoices, searchQuery, statusFilter])
 
+  // Reset to page 1 when filters change
+  useMemo(() => {
+    setCurrentPage(1)
+  }, [searchQuery, statusFilter])
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredInvoices.length / ITEMS_PER_PAGE)
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
+  const endIndex = startIndex + ITEMS_PER_PAGE
+  const paginatedInvoices = filteredInvoices.slice(startIndex, endIndex)
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'full':
@@ -73,9 +87,14 @@ export function InvoicesList({ invoices }: InvoicesListProps) {
   const clearFilters = () => {
     setSearchQuery('')
     setStatusFilter('all')
+    setCurrentPage(1)
   }
 
   const hasFilters = searchQuery || statusFilter !== 'all'
+
+  const goToPage = (page: number) => {
+    setCurrentPage(Math.max(1, Math.min(page, totalPages)))
+  }
 
   return (
     <div className="space-y-4">
@@ -110,99 +129,48 @@ export function InvoicesList({ invoices }: InvoicesListProps) {
 
       {/* Results count */}
       <p className="text-sm text-muted-foreground">
-        Showing {filteredInvoices.length} of {invoices.length} invoices
+        Showing {startIndex + 1}-{Math.min(endIndex, filteredInvoices.length)} of {filteredInvoices.length} invoices
       </p>
 
-      {filteredInvoices.length > 0 ? (
+      {paginatedInvoices.length > 0 ? (
         <>
-          {/* Mobile card view */}
-          <div className="block md:hidden divide-y border rounded-lg">
-            {filteredInvoices.map((invoice) => (
-              <div key={invoice.id} className="p-4 space-y-3">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="font-medium">
-                      INV-{String(invoice.invoice_number).padStart(4, '0')}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {format(new Date(invoice.invoice_date), 'dd/MM/yyyy')}
-                    </p>
-                  </div>
-                  {getStatusBadge(invoice.payment_status)}
-                </div>
-                <div>
-                  <p className="font-medium">{invoice.client_name}</p>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Total:</span>
-                  <span className="font-medium">
-                    Rs. {invoice.grand_total.toLocaleString('en-IN')}
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Due:</span>
-                  <span className="text-destructive font-medium">
-                    Rs. {invoice.due_amount.toLocaleString('en-IN')}
-                  </span>
-                </div>
-                <div className="flex gap-2 pt-2">
-                  <Button variant="outline" size="sm" asChild className="flex-1">
-                    <Link href={`/dashboard/invoices/${invoice.id}`}>
-                      <Eye className="mr-1 h-3 w-3" /> View
-                    </Link>
-                  </Button>
-                  <Button variant="outline" size="sm" asChild className="flex-1">
-                    <Link href={`/dashboard/invoices/${invoice.id}/edit`}>
-                      <Pencil className="mr-1 h-3 w-3" /> Edit
-                    </Link>
-                  </Button>
-                  <Button variant="outline" size="sm" asChild>
-                    <Link href={`/invoice/${invoice.id}`} target="_blank">
-                      <Printer className="h-3 w-3" />
-                    </Link>
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Desktop table view */}
-          <div className="hidden md:block overflow-x-auto border rounded-lg">
+          {/* Table view for both mobile and desktop */}
+          <div className="overflow-x-auto border rounded-lg">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Invoice #</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Client</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
-                  <TableHead className="text-right">Paid</TableHead>
-                  <TableHead className="text-right">Due</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Created By</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="whitespace-nowrap">Invoice #</TableHead>
+                  <TableHead className="whitespace-nowrap">Date</TableHead>
+                  <TableHead className="whitespace-nowrap">Client</TableHead>
+                  <TableHead className="text-right whitespace-nowrap">Total</TableHead>
+                  <TableHead className="text-right whitespace-nowrap">Paid</TableHead>
+                  <TableHead className="text-right whitespace-nowrap">Due</TableHead>
+                  <TableHead className="whitespace-nowrap">Status</TableHead>
+                  <TableHead className="whitespace-nowrap hidden md:table-cell">Created By</TableHead>
+                  <TableHead className="text-right whitespace-nowrap">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredInvoices.map((invoice) => (
+                {paginatedInvoices.map((invoice) => (
                   <TableRow key={invoice.id}>
-                    <TableCell className="font-medium">
+                    <TableCell className="font-medium whitespace-nowrap">
                       INV-{String(invoice.invoice_number).padStart(4, '0')}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="whitespace-nowrap">
                       {format(new Date(invoice.invoice_date), 'dd/MM/yyyy')}
                     </TableCell>
-                    <TableCell>{invoice.client_name}</TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="whitespace-nowrap">{invoice.client_name}</TableCell>
+                    <TableCell className="text-right whitespace-nowrap">
                       Rs. {invoice.grand_total.toLocaleString('en-IN')}
                     </TableCell>
-                    <TableCell className="text-right text-green-600">
+                    <TableCell className="text-right text-green-600 whitespace-nowrap">
                       Rs. {invoice.paid_amount.toLocaleString('en-IN')}
                     </TableCell>
-                    <TableCell className="text-right text-destructive">
+                    <TableCell className="text-right text-destructive whitespace-nowrap">
                       Rs. {invoice.due_amount.toLocaleString('en-IN')}
                     </TableCell>
                     <TableCell>{getStatusBadge(invoice.payment_status)}</TableCell>
-                    <TableCell>{invoice.profiles?.username || 'N/A'}</TableCell>
+                    <TableCell className="hidden md:table-cell">{invoice.profiles?.username || 'N/A'}</TableCell>
                     <TableCell>
                       <div className="flex justify-end gap-1">
                         <Button variant="ghost" size="icon" asChild>
@@ -228,6 +196,60 @@ export function InvoicesList({ invoices }: InvoicesListProps) {
               </TableBody>
             </Table>
           </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between border-t pt-4">
+              <p className="text-sm text-muted-foreground">
+                Page {currentPage} of {totalPages}
+              </p>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => goToPage(currentPage - 1)}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  <span className="hidden sm:inline ml-1">Previous</span>
+                </Button>
+                <div className="hidden sm:flex items-center gap-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    let pageNum: number
+                    if (totalPages <= 5) {
+                      pageNum = i + 1
+                    } else if (currentPage <= 3) {
+                      pageNum = i + 1
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNum = totalPages - 4 + i
+                    } else {
+                      pageNum = currentPage - 2 + i
+                    }
+                    return (
+                      <Button
+                        key={pageNum}
+                        variant={currentPage === pageNum ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => goToPage(pageNum)}
+                        className="w-8 h-8 p-0"
+                      >
+                        {pageNum}
+                      </Button>
+                    )
+                  })}
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => goToPage(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                >
+                  <span className="hidden sm:inline mr-1">Next</span>
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
         </>
       ) : (
         <div className="flex flex-col items-center justify-center py-12 text-center border rounded-lg">

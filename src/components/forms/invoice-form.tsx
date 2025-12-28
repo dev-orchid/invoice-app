@@ -191,7 +191,7 @@ export function InvoiceForm({ initialData }: InvoiceFormProps) {
           {/* Mobile card view */}
           <div className="block md:hidden space-y-3">
             {fields.map((field, index) => (
-              <div key={field.id} className="border rounded-lg p-4 space-y-3 bg-muted/30">
+              <div key={field.id} className="border rounded-lg p-4 space-y-3 bg-muted/30 relative">
                 <div className="flex justify-between items-start">
                   <span className="text-sm font-medium text-muted-foreground">Item {index + 1}</span>
                   <Button
@@ -212,6 +212,7 @@ export function InvoiceForm({ initialData }: InvoiceFormProps) {
                     <Input
                       {...form.register(`items.${index}.product_name`)}
                       placeholder="Enter product name"
+                      className="relative z-10"
                     />
                   </div>
                   <div className="space-y-2">
@@ -219,6 +220,9 @@ export function InvoiceForm({ initialData }: InvoiceFormProps) {
                     <Input
                       {...form.register(`items.${index}.hsn_code`)}
                       placeholder="Enter HSN code"
+                      autoComplete="off"
+                      autoCorrect="off"
+                      className="relative z-10"
                     />
                   </div>
                 </div>
@@ -232,6 +236,7 @@ export function InvoiceForm({ initialData }: InvoiceFormProps) {
                       inputMode="decimal"
                       {...form.register(`items.${index}.rate`, { valueAsNumber: true })}
                       placeholder="0"
+                      className="relative z-10"
                     />
                   </div>
                   <div className="space-y-2">
@@ -242,6 +247,7 @@ export function InvoiceForm({ initialData }: InvoiceFormProps) {
                       inputMode="decimal"
                       {...form.register(`items.${index}.quantity`, { valueAsNumber: true })}
                       placeholder="1"
+                      className="relative z-10"
                     />
                   </div>
                   <div className="space-y-2">
@@ -249,6 +255,7 @@ export function InvoiceForm({ initialData }: InvoiceFormProps) {
                     <Input
                       {...form.register(`items.${index}.unit`)}
                       placeholder="KGS"
+                      className="relative z-10"
                     />
                   </div>
                 </div>
@@ -296,6 +303,8 @@ export function InvoiceForm({ initialData }: InvoiceFormProps) {
                         {...form.register(`items.${index}.hsn_code`)}
                         placeholder="HSN"
                         className="h-9"
+                        autoComplete="off"
+                        autoCorrect="off"
                       />
                     </TableCell>
                     <TableCell>
