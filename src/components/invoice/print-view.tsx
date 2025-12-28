@@ -162,8 +162,8 @@ export function PrintView({ invoice }: PrintViewProps) {
                       {index + 1} .{item.product_name}
                     </td>
                     <td className="p-2 border-r border-gray-400">{item.hsn_code || ''}</td>
-                    <td className="p-2 text-center border-r border-gray-400">{item.rate.toFixed(0)}</td>
-                    <td className="p-2 text-center border-r border-gray-400">{item.quantity.toFixed(3)}</td>
+                    <td className="p-2 text-center border-r border-gray-400">{item.rate.toFixed(2)}</td>
+                    <td className="p-2 text-center border-r border-gray-400">{item.quantity.toFixed(2)}</td>
                     <td className="p-2 text-center border-r border-gray-400">{item.unit}</td>
                     <td className="p-2 text-right">{item.total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   </tr>

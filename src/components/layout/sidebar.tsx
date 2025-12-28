@@ -96,15 +96,15 @@ export function Sidebar({ userRole, onClose }: SidebarProps) {
   )
 
   return (
-    <aside className="flex h-screen w-64 flex-col border-r bg-card">
+    <div className="flex h-full w-full flex-col bg-card">
       <div className="flex h-16 items-center justify-between border-b px-4">
         <Link href="/dashboard" className="flex items-center gap-2" onClick={handleNavClick}>
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
             <FileText className="h-5 w-5 text-primary-foreground" />
           </div>
           <div className="flex flex-col">
-            <span className="text-base font-bold leading-tight">Invoice App</span>
-            <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Management</span>
+            <span className="text-base font-bold leading-tight">Bill Desk</span>
+            <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Invoice Management</span>
           </div>
         </Link>
         <Button
@@ -152,6 +152,6 @@ export function Sidebar({ userRole, onClose }: SidebarProps) {
           Logout
         </Button>
       </div>
-    </aside>
+    </div>
   )
 }

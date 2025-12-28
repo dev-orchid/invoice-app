@@ -30,7 +30,7 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
       <aside
         className={`
           fixed inset-y-0 left-0 z-50 w-64 bg-card border-r transform transition-transform duration-300 ease-in-out
-          lg:relative lg:transform-none lg:transition-none
+          lg:static lg:transform-none lg:transition-none lg:flex-shrink-0
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
         `}
       >

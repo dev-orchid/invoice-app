@@ -272,7 +272,7 @@ export function InvoiceForm({ initialData }: InvoiceFormProps) {
                   <TableHead className="min-w-[200px]">Product Name</TableHead>
                   <TableHead className="w-[120px]">HSN Code</TableHead>
                   <TableHead className="w-[100px]">Rate</TableHead>
-                  <TableHead className="w-[80px]">Qty</TableHead>
+                  <TableHead className="w-[100px]">Qty</TableHead>
                   <TableHead className="w-[80px]">Unit</TableHead>
                   <TableHead className="w-[120px] text-right">Amount</TableHead>
                   <TableHead className="w-[50px]"></TableHead>
