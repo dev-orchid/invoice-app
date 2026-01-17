@@ -24,7 +24,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { Trash2, Plus, Loader2 } from 'lucide-react'
+import { Trash2, Plus, Loader2, ChevronDown, ChevronRight, Truck } from 'lucide-react'
 import { createInvoice, updateInvoice } from '@/actions/invoices'
 import { invoiceSchema, type InvoiceFormData } from '@/lib/validations/invoice'
 import { toast } from 'sonner'
@@ -67,6 +67,18 @@ export function InvoiceForm({ initialData, nextInvoiceNumber }: InvoiceFormProps
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+
+  // Check if there's any transport data to auto-expand
+  const hasTransportData = initialData && (
+    initialData.eway_bill_no ||
+    initialData.lr_no ||
+    initialData.vehicle_no ||
+    initialData.dispatched_through ||
+    initialData.destination ||
+    initialData.terms_of_delivery ||
+    initialData.payment_terms
+  )
+  const [showTransportDetails, setShowTransportDetails] = useState(!!hasTransportData)
 
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768)
@@ -406,41 +418,57 @@ export function InvoiceForm({ initialData, nextInvoiceNumber }: InvoiceFormProps
         </CardContent>
       </Card>
 
-      {/* Transport Details */}
+      {/* Transport Details - Collapsible */}
       <Card>
-        <CardHeader className="pb-3 md:pb-6">
-          <CardTitle className="text-lg md:text-xl">Transport Details</CardTitle>
+        <CardHeader
+          className="pb-3 md:pb-6 cursor-pointer hover:bg-muted/50 transition-colors rounded-t-lg"
+          onClick={() => setShowTransportDetails(!showTransportDetails)}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Truck className="h-5 w-5 text-muted-foreground" />
+              <CardTitle className="text-lg md:text-xl">Transport Details</CardTitle>
+              <span className="text-xs text-muted-foreground">(Optional)</span>
+            </div>
+            {showTransportDetails ? (
+              <ChevronDown className="h-5 w-5 text-muted-foreground" />
+            ) : (
+              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+            )}
+          </div>
         </CardHeader>
-        <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <div className="space-y-2">
-            <Label htmlFor="eway_bill_no">e-Way Bill No.</Label>
-            <Input {...form.register('eway_bill_no')} placeholder="Enter e-Way Bill No." />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="lr_no">LR No.</Label>
-            <Input {...form.register('lr_no')} placeholder="Enter LR No." />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="vehicle_no">Vehicle No.</Label>
-            <Input {...form.register('vehicle_no')} placeholder="Enter Vehicle No." />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="dispatched_through">Dispatched Through</Label>
-            <Input {...form.register('dispatched_through')} placeholder="e.g., Road, Rail, Air" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="destination">Destination</Label>
-            <Input {...form.register('destination')} placeholder="Enter Destination" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="payment_terms">Payment Terms</Label>
-            <Input {...form.register('payment_terms')} placeholder="e.g., 30 DAYS" />
-          </div>
-          <div className="col-span-full space-y-2">
-            <Label htmlFor="terms_of_delivery">Terms of Delivery</Label>
-            <Input {...form.register('terms_of_delivery')} placeholder="Enter delivery terms" />
-          </div>
-        </CardContent>
+        {showTransportDetails && (
+          <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 pt-0">
+            <div className="space-y-2">
+              <Label htmlFor="eway_bill_no">e-Way Bill No.</Label>
+              <Input {...form.register('eway_bill_no')} placeholder="Enter e-Way Bill No." />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="lr_no">LR No.</Label>
+              <Input {...form.register('lr_no')} placeholder="Enter LR No." />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="vehicle_no">Vehicle No.</Label>
+              <Input {...form.register('vehicle_no')} placeholder="Enter Vehicle No." />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="dispatched_through">Dispatched Through</Label>
+              <Input {...form.register('dispatched_through')} placeholder="e.g., Road, Rail, Air" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="destination">Destination</Label>
+              <Input {...form.register('destination')} placeholder="Enter Destination" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="payment_terms">Payment Terms</Label>
+              <Input {...form.register('payment_terms')} placeholder="e.g., 30 DAYS" />
+            </div>
+            <div className="col-span-full space-y-2">
+              <Label htmlFor="terms_of_delivery">Terms of Delivery</Label>
+              <Input {...form.register('terms_of_delivery')} placeholder="Enter delivery terms" />
+            </div>
+          </CardContent>
+        )}
       </Card>
 
       {/* Payment and Summary */}
