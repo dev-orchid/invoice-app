@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { Metadata } from 'next'
 import { createClient } from '@/lib/supabase/server'
 import { PrintView } from '@/components/invoice/print-view'
+import { getCompanySettings } from '@/actions/settings'
 
 export async function generateMetadata({
   params,
@@ -30,15 +31,18 @@ export default async function PrintInvoicePage({
   const { id } = await params
   const supabase = await createClient()
 
-  const { data: invoice } = await supabase
-    .from('invoices')
-    .select(`*, invoice_items (*)`)
-    .eq('id', id)
-    .single()
+  const [invoiceResult, companySettings] = await Promise.all([
+    supabase
+      .from('invoices')
+      .select(`*, invoice_items (*)`)
+      .eq('id', id)
+      .single(),
+    getCompanySettings(),
+  ])
 
-  if (!invoice) {
+  if (!invoiceResult.data) {
     notFound()
   }
 
-  return <PrintView invoice={invoice} />
+  return <PrintView invoice={invoiceResult.data} companySettings={companySettings} />
 }

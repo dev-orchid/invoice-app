@@ -4,6 +4,19 @@ import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { invoiceSchema, type InvoiceFormData } from '@/lib/validations/invoice'
 
+export async function getNextInvoiceNumber() {
+  const supabase = await createClient()
+
+  const { data } = await supabase
+    .from('invoices')
+    .select('invoice_number')
+    .order('invoice_number', { ascending: false })
+    .limit(1)
+    .single()
+
+  return (data?.invoice_number || 0) + 1
+}
+
 export async function createInvoice(formData: InvoiceFormData) {
   const supabase = await createClient()
 

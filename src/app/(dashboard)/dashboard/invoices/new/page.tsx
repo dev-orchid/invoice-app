@@ -1,6 +1,9 @@
 import { InvoiceForm } from '@/components/forms/invoice-form'
+import { getNextInvoiceNumber } from '@/actions/invoices'
 
-export default function NewInvoicePage() {
+export default async function NewInvoicePage() {
+  const nextInvoiceNumber = await getNextInvoiceNumber()
+
   return (
     <div className="space-y-6">
       <div>
@@ -8,7 +11,7 @@ export default function NewInvoicePage() {
         <p className="text-muted-foreground">Create a new invoice for your client.</p>
       </div>
 
-      <InvoiceForm />
+      <InvoiceForm nextInvoiceNumber={nextInvoiceNumber} />
     </div>
   )
 }

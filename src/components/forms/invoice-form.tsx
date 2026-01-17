@@ -34,6 +34,7 @@ const GST_RATE = 0.18 // 18% GST
 interface InvoiceFormProps {
   initialData?: {
     id: string
+    invoice_number: number
     gstin: string | null
     invoice_date: string
     client_name: string
@@ -44,6 +45,13 @@ interface InvoiceFormProps {
     payment_type: 'cash' | 'cheque' | 'credit_card' | 'phone_pe' | 'google_pay' | 'amazon_pay'
     payment_status: 'full' | 'advance' | 'unpaid'
     payment_place: 'india' | 'outside_india'
+    eway_bill_no: string | null
+    lr_no: string | null
+    vehicle_no: string | null
+    dispatched_through: string | null
+    destination: string | null
+    terms_of_delivery: string | null
+    payment_terms: string | null
     invoice_items: Array<{
       product_name: string
       hsn_code: string | null
@@ -52,9 +60,10 @@ interface InvoiceFormProps {
       unit: string
     }>
   }
+  nextInvoiceNumber?: number
 }
 
-export function InvoiceForm({ initialData }: InvoiceFormProps) {
+export function InvoiceForm({ initialData, nextInvoiceNumber }: InvoiceFormProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
@@ -70,6 +79,7 @@ export function InvoiceForm({ initialData }: InvoiceFormProps) {
     resolver: zodResolver(invoiceSchema),
     defaultValues: initialData
       ? {
+          invoice_number: initialData.invoice_number,
           gstin: initialData.gstin || '',
           invoice_date: initialData.invoice_date,
           client_name: initialData.client_name,
@@ -81,6 +91,13 @@ export function InvoiceForm({ initialData }: InvoiceFormProps) {
           payment_type: initialData.payment_type,
           payment_status: initialData.payment_status,
           payment_place: initialData.payment_place,
+          eway_bill_no: initialData.eway_bill_no || '',
+          lr_no: initialData.lr_no || '',
+          vehicle_no: initialData.vehicle_no || '',
+          dispatched_through: initialData.dispatched_through || '',
+          destination: initialData.destination || '',
+          terms_of_delivery: initialData.terms_of_delivery || '',
+          payment_terms: initialData.payment_terms || '',
           items: initialData.invoice_items.map((item) => ({
             product_name: item.product_name,
             hsn_code: item.hsn_code || '',
@@ -90,6 +107,7 @@ export function InvoiceForm({ initialData }: InvoiceFormProps) {
           })),
         }
       : {
+          invoice_number: nextInvoiceNumber || 1,
           gstin: '',
           invoice_date: new Date().toISOString().split('T')[0],
           client_name: '',
@@ -101,6 +119,13 @@ export function InvoiceForm({ initialData }: InvoiceFormProps) {
           payment_type: 'cash',
           payment_status: 'unpaid',
           payment_place: 'india',
+          eway_bill_no: '',
+          lr_no: '',
+          vehicle_no: '',
+          dispatched_through: '',
+          destination: '',
+          terms_of_delivery: '',
+          payment_terms: '',
           items: [{ product_name: '', hsn_code: '', rate: 0, quantity: 1, unit: 'KGS' }],
         },
   })
@@ -152,19 +177,27 @@ export function InvoiceForm({ initialData }: InvoiceFormProps) {
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 md:space-y-6">
-      {/* Client Details */}
+      {/* Invoice & Client Details */}
       <Card>
         <CardHeader className="pb-3 md:pb-6">
-          <CardTitle className="text-lg md:text-xl">Client Details</CardTitle>
+          <CardTitle className="text-lg md:text-xl">Invoice & Client Details</CardTitle>
         </CardHeader>
-        <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           <div className="space-y-2">
-            <Label htmlFor="gstin">GSTIN/UN</Label>
-            <Input {...form.register('gstin')} placeholder="Enter GSTIN" />
+            <Label htmlFor="invoice_number">Invoice Number *</Label>
+            <Input
+              type="number"
+              {...form.register('invoice_number', { valueAsNumber: true })}
+              placeholder="e.g., 81"
+            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="invoice_date">Invoice Date</Label>
             <Input type="date" {...form.register('invoice_date')} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="gstin">GSTIN/UN</Label>
+            <Input {...form.register('gstin')} placeholder="Enter GSTIN" />
           </div>
           <div className="space-y-2">
             <Label htmlFor="client_name">Client Name *</Label>
@@ -370,6 +403,43 @@ export function InvoiceForm({ initialData }: InvoiceFormProps) {
           >
             <Plus className="mr-2 h-4 w-4" /> Add Item
           </Button>
+        </CardContent>
+      </Card>
+
+      {/* Transport Details */}
+      <Card>
+        <CardHeader className="pb-3 md:pb-6">
+          <CardTitle className="text-lg md:text-xl">Transport Details</CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="space-y-2">
+            <Label htmlFor="eway_bill_no">e-Way Bill No.</Label>
+            <Input {...form.register('eway_bill_no')} placeholder="Enter e-Way Bill No." />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="lr_no">LR No.</Label>
+            <Input {...form.register('lr_no')} placeholder="Enter LR No." />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="vehicle_no">Vehicle No.</Label>
+            <Input {...form.register('vehicle_no')} placeholder="Enter Vehicle No." />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="dispatched_through">Dispatched Through</Label>
+            <Input {...form.register('dispatched_through')} placeholder="e.g., Road, Rail, Air" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="destination">Destination</Label>
+            <Input {...form.register('destination')} placeholder="Enter Destination" />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="payment_terms">Payment Terms</Label>
+            <Input {...form.register('payment_terms')} placeholder="e.g., 30 DAYS" />
+          </div>
+          <div className="col-span-full space-y-2">
+            <Label htmlFor="terms_of_delivery">Terms of Delivery</Label>
+            <Input {...form.register('terms_of_delivery')} placeholder="Enter delivery terms" />
+          </div>
         </CardContent>
       </Card>
 

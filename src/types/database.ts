@@ -166,6 +166,13 @@ export type Database = {
           payment_type: 'cash' | 'cheque' | 'credit_card' | 'phone_pe' | 'google_pay' | 'amazon_pay'
           payment_status: 'full' | 'advance' | 'unpaid'
           payment_place: 'india' | 'outside_india'
+          eway_bill_no: string | null
+          lr_no: string | null
+          vehicle_no: string | null
+          dispatched_through: string | null
+          destination: string | null
+          terms_of_delivery: string | null
+          payment_terms: string | null
           created_by: string | null
           is_deleted: boolean
           created_at: string
@@ -190,6 +197,13 @@ export type Database = {
           payment_type?: 'cash' | 'cheque' | 'credit_card' | 'phone_pe' | 'google_pay' | 'amazon_pay'
           payment_status?: 'full' | 'advance' | 'unpaid'
           payment_place?: 'india' | 'outside_india'
+          eway_bill_no?: string | null
+          lr_no?: string | null
+          vehicle_no?: string | null
+          dispatched_through?: string | null
+          destination?: string | null
+          terms_of_delivery?: string | null
+          payment_terms?: string | null
           created_by?: string | null
           is_deleted?: boolean
           created_at?: string
@@ -214,6 +228,13 @@ export type Database = {
           payment_type?: 'cash' | 'cheque' | 'credit_card' | 'phone_pe' | 'google_pay' | 'amazon_pay'
           payment_status?: 'full' | 'advance' | 'unpaid'
           payment_place?: 'india' | 'outside_india'
+          eway_bill_no?: string | null
+          lr_no?: string | null
+          vehicle_no?: string | null
+          dispatched_through?: string | null
+          destination?: string | null
+          terms_of_delivery?: string | null
+          payment_terms?: string | null
           created_by?: string | null
           is_deleted?: boolean
           created_at?: string
@@ -269,6 +290,12 @@ export type Database = {
           bank_name: string | null
           account_number: string | null
           ifsc_code: string | null
+          pan_number: string | null
+          state_name: string | null
+          state_code: string | null
+          account_holder_name: string | null
+          branch_name: string | null
+          declaration: string | null
           created_at: string
           updated_at: string
         }
@@ -282,6 +309,12 @@ export type Database = {
           bank_name?: string | null
           account_number?: string | null
           ifsc_code?: string | null
+          pan_number?: string | null
+          state_name?: string | null
+          state_code?: string | null
+          account_holder_name?: string | null
+          branch_name?: string | null
+          declaration?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -295,6 +328,12 @@ export type Database = {
           bank_name?: string | null
           account_number?: string | null
           ifsc_code?: string | null
+          pan_number?: string | null
+          state_name?: string | null
+          state_code?: string | null
+          account_holder_name?: string | null
+          branch_name?: string | null
+          declaration?: string | null
           created_at?: string
           updated_at?: string
         }

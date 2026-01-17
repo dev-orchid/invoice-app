@@ -26,6 +26,12 @@ const companySettingsSchema = z.object({
   bank_name: z.string().optional(),
   account_number: z.string().optional(),
   ifsc_code: z.string().optional(),
+  pan_number: z.string().optional(),
+  state_name: z.string().optional(),
+  state_code: z.string().optional(),
+  account_holder_name: z.string().optional(),
+  branch_name: z.string().optional(),
+  declaration: z.string().optional(),
 })
 
 export type CompanySettingsData = z.infer<typeof companySettingsSchema>
@@ -78,6 +84,12 @@ export async function getCompanySettings() {
     bank_name: '',
     account_number: '',
     ifsc_code: '',
+    pan_number: '',
+    state_name: 'Bihar',
+    state_code: '10',
+    account_holder_name: '',
+    branch_name: '',
+    declaration: 'We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct.',
   }
 }
 

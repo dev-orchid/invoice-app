@@ -25,7 +25,7 @@ function numberToWords(num: number): string {
   const rupees = Math.floor(num)
   const paise = Math.round((num - rupees) * 100)
 
-  let result = convert(rupees) + ' Rupees'
+  let result = 'Indian Rupees ' + convert(rupees)
   if (paise > 0) {
     result += ' and ' + convert(paise) + ' Paise'
   }
@@ -57,17 +57,95 @@ interface Invoice {
   cgst_amount: number
   sgst_amount: number
   grand_total: number
+  eway_bill_no: string | null
+  lr_no: string | null
+  vehicle_no: string | null
+  dispatched_through: string | null
+  destination: string | null
+  terms_of_delivery: string | null
+  payment_terms: string | null
   invoice_items: InvoiceItem[]
+}
+
+interface CompanySettings {
+  company_name: string
+  gstin: string
+  address: string
+  phone: string | null
+  email: string | null
+  bank_name: string | null
+  account_number: string | null
+  ifsc_code: string | null
+  pan_number: string | null
+  state_name: string | null
+  state_code: string | null
+  account_holder_name: string | null
+  branch_name: string | null
+  declaration: string | null
 }
 
 interface PrintViewProps {
   invoice: Invoice
+  companySettings: CompanySettings
 }
 
-export function PrintView({ invoice }: PrintViewProps) {
+interface HSNSummary {
+  hsn_code: string
+  taxable_value: number
+  cgst_rate: number
+  cgst_amount: number
+  sgst_rate: number
+  sgst_amount: number
+  total_tax: number
+}
+
+export function PrintView({ invoice, companySettings }: PrintViewProps) {
   const taxableAmount = invoice.sub_total - invoice.discount
   const financialYear = new Date(invoice.invoice_date).getFullYear()
-  const invoiceNo = `SJMW/${String(invoice.invoice_number).padStart(2, '0')}/${financialYear}-${(financialYear + 1).toString().slice(-2)}`
+  const month = new Date(invoice.invoice_date).getMonth()
+  // Financial year starts in April
+  const fyStart = month >= 3 ? financialYear : financialYear - 1
+  const fyEnd = fyStart + 1
+  // Format: SJMW/81/25-26 (invoice_number/short_year_start-short_year_end)
+  const invoiceNo = `SJMW/${invoice.invoice_number}/${String(fyStart).slice(-2)}-${String(fyEnd).slice(-2)}`
+
+  // Calculate round off
+  const exactTotal = taxableAmount + invoice.gst_amount
+  const roundedTotal = Math.round(exactTotal)
+  const roundOff = roundedTotal - exactTotal
+
+  // Group items by HSN code for HSN summary
+  const hsnSummaryMap = new Map<string, HSNSummary>()
+  invoice.invoice_items.forEach(item => {
+    const hsn = item.hsn_code || 'N/A'
+    const existing = hsnSummaryMap.get(hsn)
+    const itemTaxable = item.total
+    const cgstRate = 9
+    const sgstRate = 9
+    const cgstAmount = itemTaxable * 0.09
+    const sgstAmount = itemTaxable * 0.09
+
+    if (existing) {
+      existing.taxable_value += itemTaxable
+      existing.cgst_amount += cgstAmount
+      existing.sgst_amount += sgstAmount
+      existing.total_tax += cgstAmount + sgstAmount
+    } else {
+      hsnSummaryMap.set(hsn, {
+        hsn_code: hsn,
+        taxable_value: itemTaxable,
+        cgst_rate: cgstRate,
+        cgst_amount: cgstAmount,
+        sgst_rate: sgstRate,
+        sgst_amount: sgstAmount,
+        total_tax: cgstAmount + sgstAmount,
+      })
+    }
+  })
+  const hsnSummary = Array.from(hsnSummaryMap.values())
+
+  const stateName = companySettings.state_name || 'Bihar'
+  const stateCode = companySettings.state_code || '10'
 
   return (
     <div className="bg-white min-h-screen">
@@ -102,195 +180,411 @@ export function PrintView({ invoice }: PrintViewProps) {
         </button>
       </div>
 
-      <div className="print-container max-w-4xl mx-auto p-8 text-sm">
-        {/* Header with GSTIN and ORIGINAL COPY */}
-        <div className="flex justify-between items-start mb-2 text-xs">
-          <span className="font-medium">GSTIN : 10CEKPP9425G1ZG</span>
-          <span className="font-bold">ORIGINAL COPY</span>
-        </div>
+      <div className="print-container max-w-4xl mx-auto p-8 text-[11px] leading-snug font-sans">
+        {/* Main Invoice Container */}
+        <div className="border border-gray-400">
+          {/* Company Header */}
+          <div className="text-center py-3 px-4 border-b border-gray-400">
+            <h1 className="text-2xl font-bold">{companySettings.company_name}</h1>
+            <p className="text-xs mt-1">{companySettings.address}</p>
+            {companySettings.phone && <p className="text-xs">Contact: {companySettings.phone}</p>}
+            <p className="text-xs">
+              <strong>GSTIN:</strong> {companySettings.gstin} &nbsp;&nbsp;&nbsp; <strong>State:</strong> {stateName} ({stateCode})
+            </p>
+          </div>
 
-        {/* Tax Invoice Title */}
-        <div className="text-center mb-4">
-          <h1 className="text-base mb-1">Tax Invoice</h1>
-          <h2 className="text-lg font-bold">Sipahi Jee Metal Works</h2>
-          <p className="text-xs">NEW ATWARPUR KURTHAUL, Parsa Bazar</p>
-          <p className="text-xs">Patna, Bihar, 804453</p>
-        </div>
+          {/* Tax Invoice Title */}
+          <div className="text-center py-2 border-b border-gray-400">
+            <h2 className="text-base font-bold">TAX INVOICE</h2>
+          </div>
 
-        {/* Party Details and Invoice Info */}
-        <div className="border border-gray-400 mb-4">
-          <div className="flex">
-            {/* Left - Party Details */}
-            <div className="w-1/2 p-3 border-r border-gray-400">
-              <p className="font-bold text-base mb-1">Party Details:-</p>
-              <p className="font-medium">{invoice.client_name.toUpperCase()}</p>
-              {invoice.ship_address && <p className="uppercase">{invoice.ship_address}</p>}
-              {invoice.gstin && (
-                <p className="mt-2">GSTIN/UN : {invoice.gstin}</p>
-              )}
+          {/* Two Column Layout - Consignee/Buyer and Invoice Details */}
+          <div className="flex border-b border-gray-400">
+            {/* Left Column - Consignee and Buyer */}
+            <div className="w-1/2 border-r border-gray-400">
+              {/* Consignee */}
+              <div className="p-3 border-b border-gray-400">
+                <p className="font-bold mb-1">Consignee (Ship to)</p>
+                <p className="font-semibold">{invoice.client_name}</p>
+                {invoice.ship_address && <p>{invoice.ship_address}</p>}
+                {invoice.gstin && <p><strong>GSTIN/UIN:</strong> {invoice.gstin}</p>}
+                <p><strong>State Name:</strong> {stateName}, <strong>Code:</strong> {stateCode}</p>
+                {invoice.client_contact && <p><strong>Contact:</strong> {invoice.client_contact}</p>}
+              </div>
+              {/* Buyer */}
+              <div className="p-3">
+                <p className="font-bold mb-1">Buyer (Bill to)</p>
+                <p className="font-semibold">{invoice.client_name}</p>
+                {invoice.ship_address && <p>{invoice.ship_address}</p>}
+                {invoice.gstin && <p><strong>GSTIN/UIN:</strong> {invoice.gstin}</p>}
+                <p><strong>State Name:</strong> {stateName}, <strong>Code:</strong> {stateCode}</p>
+                {invoice.client_contact && <p><strong>Contact:</strong> {invoice.client_contact}</p>}
+              </div>
             </div>
 
-            {/* Right - Invoice Details */}
-            <div className="w-1/2 p-3 space-y-1">
-              <p>Invoice No. : {invoiceNo}</p>
-              <p>Dated : {format(new Date(invoice.invoice_date), 'yyyy-MM-dd')}</p>
-              <p>Place of Supply : Bihar (10)</p>
-              <p>Reverse Charge: N</p>
+            {/* Right Column - Invoice Details */}
+            <div className="w-1/2">
+              <table className="w-full h-full">
+                <tbody>
+                  <tr className="border-b border-gray-400">
+                    <td className="p-2 border-r border-gray-400 font-semibold w-1/2">Invoice No.</td>
+                    <td className="p-2">{invoiceNo}</td>
+                  </tr>
+                  <tr className="border-b border-gray-400">
+                    <td className="p-2 border-r border-gray-400 font-semibold">Dated</td>
+                    <td className="p-2">{format(new Date(invoice.invoice_date), 'dd-MMM-yyyy')}</td>
+                  </tr>
+                  {invoice.eway_bill_no && (
+                    <tr className="border-b border-gray-400">
+                      <td className="p-2 border-r border-gray-400 font-semibold">e-Way Bill No.</td>
+                      <td className="p-2">{invoice.eway_bill_no}</td>
+                    </tr>
+                  )}
+                  <tr className="border-b border-gray-400">
+                    <td className="p-2 border-r border-gray-400 font-semibold">Mode/Terms of Payment</td>
+                    <td className="p-2">{invoice.payment_terms || '-'}</td>
+                  </tr>
+                  <tr className="border-b border-gray-400">
+                    <td className="p-2 border-r border-gray-400 font-semibold">Dispatched through</td>
+                    <td className="p-2">{invoice.dispatched_through || '-'}</td>
+                  </tr>
+                  <tr className="border-b border-gray-400">
+                    <td className="p-2 border-r border-gray-400 font-semibold">Destination</td>
+                    <td className="p-2">{invoice.destination || '-'}</td>
+                  </tr>
+                  <tr className="border-b border-gray-400">
+                    <td className="p-2 border-r border-gray-400 font-semibold">LR No.</td>
+                    <td className="p-2">{invoice.lr_no || '-'}</td>
+                  </tr>
+                  <tr className="border-b border-gray-400">
+                    <td className="p-2 border-r border-gray-400 font-semibold">Vehicle No.</td>
+                    <td className="p-2">{invoice.vehicle_no || '-'}</td>
+                  </tr>
+                  <tr>
+                    <td className="p-2 border-r border-gray-400 font-semibold">Terms of Delivery</td>
+                    <td className="p-2">{invoice.terms_of_delivery || '-'}</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
-        </div>
 
-        {/* Products Table */}
-        <div className="border border-gray-400 mb-1">
-          <table className="w-full">
+          {/* Products Table */}
+          <table className="w-full border-b border-gray-400">
             <thead>
-              <tr className="border-b border-gray-400">
-                <th className="p-2 text-left font-medium border-r border-gray-400 w-[35%]">Description of Goods</th>
-                <th className="p-2 text-left font-medium border-r border-gray-400 w-[15%]">HSN/SAC</th>
-                <th className="p-2 text-center font-medium border-r border-gray-400 w-[12%]">Rate</th>
-                <th className="p-2 text-center font-medium border-r border-gray-400 w-[12%]">Quantity</th>
-                <th className="p-2 text-center font-medium border-r border-gray-400 w-[8%]">Per</th>
-                <th className="p-2 text-right font-medium w-[18%]">Amount</th>
+              <tr className="border-b border-gray-400 bg-gray-50">
+                <th className="p-2 text-center border-r border-gray-400 w-[8%] font-semibold">Sl No.</th>
+                <th className="p-2 text-left border-r border-gray-400 font-semibold">Description of Goods</th>
+                <th className="p-2 text-center border-r border-gray-400 w-[12%] font-semibold">HSN/SAC</th>
+                <th className="p-2 text-right border-r border-gray-400 w-[10%] font-semibold">Quantity</th>
+                <th className="p-2 text-right border-r border-gray-400 w-[10%] font-semibold">Rate</th>
+                <th className="p-2 text-center border-r border-gray-400 w-[8%] font-semibold">per</th>
+                <th className="p-2 text-right w-[14%] font-semibold">Amount</th>
               </tr>
             </thead>
             <tbody>
               {invoice.invoice_items
                 .sort((a, b) => a.sort_order - b.sort_order)
                 .map((item, index) => (
-                  <tr key={item.id}>
-                    <td className="p-2 border-r border-gray-400">
-                      {index + 1} .{item.product_name}
-                    </td>
-                    <td className="p-2 border-r border-gray-400">{item.hsn_code || ''}</td>
-                    <td className="p-2 text-center border-r border-gray-400">{item.rate.toFixed(2)}</td>
-                    <td className="p-2 text-center border-r border-gray-400">{item.quantity.toFixed(2)}</td>
+                  <tr key={item.id} className="border-b border-gray-400">
+                    <td className="p-2 text-center border-r border-gray-400">{index + 1}</td>
+                    <td className="p-2 border-r border-gray-400">{item.product_name}</td>
+                    <td className="p-2 text-center border-r border-gray-400">{item.hsn_code || ''}</td>
+                    <td className="p-2 text-right border-r border-gray-400">{item.quantity.toFixed(2)}</td>
+                    <td className="p-2 text-right border-r border-gray-400">{item.rate.toFixed(2)}</td>
                     <td className="p-2 text-center border-r border-gray-400">{item.unit}</td>
                     <td className="p-2 text-right">{item.total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   </tr>
                 ))}
 
-              {/* Empty rows for spacing */}
-              <tr>
-                <td className="p-2 border-r border-gray-400">&nbsp;</td>
+              {/* Sub Total */}
+              <tr className="border-b border-gray-400">
                 <td className="p-2 border-r border-gray-400"></td>
-                <td className="p-2 border-r border-gray-400"></td>
-                <td className="p-2 border-r border-gray-400"></td>
-                <td className="p-2 border-r border-gray-400"></td>
-                <td className="p-2 text-right border-t border-gray-400">{taxableAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td className="p-2 border-r border-gray-400 text-right font-semibold" colSpan={5}>Sub Total</td>
+                <td className="p-2 text-right">{taxableAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
               </tr>
 
-              {/* CGST Row */}
-              <tr>
+              {/* CGST */}
+              <tr className="border-b border-gray-400">
                 <td className="p-2 border-r border-gray-400"></td>
-                <td className="p-2 border-r border-gray-400 font-medium">CGST</td>
-                <td className="p-2 border-r border-gray-400"></td>
-                <td className="p-2 border-r border-gray-400"></td>
-                <td className="p-2 border-r border-gray-400"></td>
+                <td className="p-2 border-r border-gray-400 text-right" colSpan={5}>CGST @ 9%</td>
                 <td className="p-2 text-right">{invoice.cgst_amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
               </tr>
 
-              {/* SGST Row */}
-              <tr>
+              {/* SGST */}
+              <tr className="border-b border-gray-400">
                 <td className="p-2 border-r border-gray-400"></td>
-                <td className="p-2 border-r border-gray-400 font-medium">SGST</td>
-                <td className="p-2 border-r border-gray-400"></td>
-                <td className="p-2 border-r border-gray-400"></td>
-                <td className="p-2 border-r border-gray-400"></td>
+                <td className="p-2 border-r border-gray-400 text-right" colSpan={5}>SGST @ 9%</td>
                 <td className="p-2 text-right">{invoice.sgst_amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
               </tr>
 
-              {/* Empty rows for visual spacing */}
-              {[...Array(5)].map((_, i) => (
-                <tr key={`empty-${i}`}>
-                  <td className="p-2 border-r border-gray-400">&nbsp;</td>
+              {/* Round Off */}
+              {roundOff !== 0 && (
+                <tr className="border-b border-gray-400">
                   <td className="p-2 border-r border-gray-400"></td>
-                  <td className="p-2 border-r border-gray-400"></td>
-                  <td className="p-2 border-r border-gray-400"></td>
-                  <td className="p-2 border-r border-gray-400"></td>
-                  <td className="p-2"></td>
+                  <td className="p-2 border-r border-gray-400 text-right" colSpan={5}>Round Off</td>
+                  <td className="p-2 text-right">{roundOff >= 0 ? '+' : ''}{roundOff.toFixed(2)}</td>
                 </tr>
-              ))}
+              )}
 
-              {/* Total Row */}
-              <tr className="border-t border-gray-400">
+              {/* Total */}
+              <tr className="border-b border-gray-400">
                 <td className="p-2 border-r border-gray-400"></td>
-                <td className="p-2 border-r border-gray-400 font-medium">Total:</td>
-                <td className="p-2 border-r border-gray-400"></td>
-                <td className="p-2 border-r border-gray-400"></td>
-                <td className="p-2 border-r border-gray-400"></td>
-                <td className="p-2 text-right font-bold">{invoice.grand_total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td className="p-2 border-r border-gray-400 text-right font-bold" colSpan={5}>Total</td>
+                <td className="p-2 text-right font-bold">&#x20B9; {roundedTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
               </tr>
             </tbody>
           </table>
 
-          {/* Amount Chargeable in Words */}
-          <div className="border-t border-gray-400 p-2">
-            <p className="text-xs">Amount Chargable (in words)</p>
-            <p className="font-bold">{numberToWords(invoice.grand_total)}</p>
+          {/* Amount in Words */}
+          <div className="p-3 border-b border-gray-400">
+            <p><strong>Amount Chargeable (in words):</strong></p>
+            <p className="font-bold">{numberToWords(roundedTotal)}</p>
           </div>
-        </div>
 
-        {/* Tax Breakdown Table */}
-        <div className="border border-gray-400 mb-4">
-          <table className="w-full text-xs">
+          {/* HSN Summary Table */}
+          <table className="w-full border-b border-gray-400 text-[10px]">
             <thead>
               <tr className="border-b border-gray-400">
-                <th className="p-2 text-left font-medium border-r border-gray-400" rowSpan={2}>Taxable Amount</th>
-                <th className="p-2 text-center font-medium border-r border-gray-400" colSpan={2}>CGST</th>
-                <th className="p-2 text-center font-medium border-r border-gray-400" colSpan={2}>SGST/UTGST</th>
-                <th className="p-2 text-center font-medium" rowSpan={2}>Total</th>
+                <th className="p-2 text-left border-r border-gray-400 font-semibold" rowSpan={2}>HSN/SAC</th>
+                <th className="p-2 text-right border-r border-gray-400 font-semibold" rowSpan={2}>Taxable Value</th>
+                <th className="p-2 text-center border-r border-gray-400 font-semibold" colSpan={2}>CGST</th>
+                <th className="p-2 text-center border-r border-gray-400 font-semibold" colSpan={2}>SGST</th>
+                <th className="p-2 text-right font-semibold" rowSpan={2}>Total Tax Amount</th>
               </tr>
               <tr className="border-b border-gray-400">
-                <th className="p-2 text-center font-medium border-r border-gray-400">Rate</th>
-                <th className="p-2 text-center font-medium border-r border-gray-400">Amount</th>
-                <th className="p-2 text-center font-medium border-r border-gray-400">Rate</th>
-                <th className="p-2 text-center font-medium border-r border-gray-400">Amount</th>
+                <th className="p-2 text-center border-r border-gray-400 font-semibold">Rate</th>
+                <th className="p-2 text-right border-r border-gray-400 font-semibold">Amount</th>
+                <th className="p-2 text-center border-r border-gray-400 font-semibold">Rate</th>
+                <th className="p-2 text-right border-r border-gray-400 font-semibold">Amount</th>
               </tr>
             </thead>
             <tbody>
-              <tr className="border-b border-gray-400">
-                <td className="p-2 text-right border-r border-gray-400">{taxableAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                <td className="p-2 text-center border-r border-gray-400">9%</td>
-                <td className="p-2 text-right border-r border-gray-400">{invoice.cgst_amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                <td className="p-2 text-center border-r border-gray-400">9%</td>
-                <td className="p-2 text-right border-r border-gray-400">{invoice.sgst_amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                <td className="p-2 text-right font-medium">{invoice.gst_amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-              </tr>
+              {hsnSummary.map((hsn, index) => (
+                <tr key={index} className="border-b border-gray-400">
+                  <td className="p-2 border-r border-gray-400">{hsn.hsn_code}</td>
+                  <td className="p-2 text-right border-r border-gray-400">{hsn.taxable_value.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                  <td className="p-2 text-center border-r border-gray-400">{hsn.cgst_rate}%</td>
+                  <td className="p-2 text-right border-r border-gray-400">{hsn.cgst_amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                  <td className="p-2 text-center border-r border-gray-400">{hsn.sgst_rate}%</td>
+                  <td className="p-2 text-right border-r border-gray-400">{hsn.sgst_amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                  <td className="p-2 text-right">{hsn.total_tax.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                </tr>
+              ))}
               <tr>
-                <td className="p-2 text-right border-r border-gray-400 font-medium">Total: {taxableAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td className="p-2 border-r border-gray-400 font-bold">Total</td>
+                <td className="p-2 text-right border-r border-gray-400 font-bold">{taxableAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                 <td className="p-2 border-r border-gray-400"></td>
-                <td className="p-2 text-right border-r border-gray-400 font-medium">{invoice.cgst_amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td className="p-2 text-right border-r border-gray-400 font-bold">{invoice.cgst_amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                 <td className="p-2 border-r border-gray-400"></td>
-                <td className="p-2 text-right border-r border-gray-400 font-medium">{invoice.sgst_amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                <td className="p-2 text-right font-medium">{invoice.gst_amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td className="p-2 text-right border-r border-gray-400 font-bold">{invoice.sgst_amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td className="p-2 text-right font-bold">{invoice.gst_amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
               </tr>
             </tbody>
           </table>
-        </div>
 
-        {/* Tax Amount in Words */}
-        <p className="text-xs mb-4">
-          <span>Tax Amount (in words) </span>
-          <span className="font-bold">{numberToWords(invoice.gst_amount)}</span>
-        </p>
+          {/* Tax Amount in Words */}
+          <div className="p-3 border-b border-gray-400 text-[10px]">
+            <p><strong>Tax Amount (in words):</strong> {numberToWords(invoice.gst_amount)}</p>
+          </div>
 
-        {/* Declaration and Signature */}
-        <div className="border border-gray-400">
+          {/* Footer - Three Columns */}
           <div className="flex">
-            <div className="w-2/3 p-3 border-r border-gray-400">
-              <p className="underline font-medium mb-1">Declaration</p>
-              <p className="text-xs">
-                We declare that this invoice shows the actual price of the goods described and that all
-                the particulars are true correct.
+            {/* Remarks */}
+            <div className="w-1/3 p-3 border-r border-gray-400">
+              <p className="font-bold mb-1">Remarks:</p>
+              <p>Invoice No: {invoiceNo}</p>
+            </div>
+
+            {/* Declaration */}
+            <div className="w-1/3 p-3 border-r border-gray-400">
+              <p className="font-bold underline mb-1">Declaration</p>
+              <p className="text-[9px]">
+                {companySettings.declaration || 'We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct.'}
               </p>
             </div>
-            <div className="w-1/3 p-3 text-right">
-              <p className="font-medium mb-8">For Sipahi Jee Metal Works</p>
-              <p className="text-xs">Authorized Signatory</p>
+
+            {/* Bank Details and Signature */}
+            <div className="w-1/3 p-3">
+              <p className="font-bold mb-1">Company&apos;s Bank Details</p>
+              {companySettings.account_holder_name && (
+                <p className="text-[9px]"><strong>A/c Holder&apos;s Name:</strong> {companySettings.account_holder_name}</p>
+              )}
+              {companySettings.bank_name && (
+                <p className="text-[9px]"><strong>Bank Name:</strong> {companySettings.bank_name}</p>
+              )}
+              {companySettings.account_number && (
+                <p className="text-[9px]"><strong>A/c No.:</strong> {companySettings.account_number}</p>
+              )}
+              {(companySettings.branch_name || companySettings.ifsc_code) && (
+                <p className="text-[9px]"><strong>Branch & IFSC:</strong> {companySettings.branch_name}{companySettings.branch_name && companySettings.ifsc_code ? ' & ' : ''}{companySettings.ifsc_code}</p>
+              )}
+
+              <div className="mt-6 text-right">
+                <p className="font-bold">For {companySettings.company_name}</p>
+                <div className="h-12"></div>
+                <p>Authorised Signatory</p>
+              </div>
             </div>
           </div>
         </div>
+
+        {/* Footer text outside box */}
+        <div className="text-center mt-3 text-[9px] text-gray-500">
+          <p>SUBJECT TO {stateName.toUpperCase()} JURISDICTION</p>
+          <p>This is a Computer Generated Invoice</p>
+        </div>
+
       </div>
+
+      {/* e-Way Bill Page - Only shown when e-Way Bill number exists */}
+      {invoice.eway_bill_no && (
+        <div className="print-container max-w-4xl mx-auto p-8 text-[11px] leading-snug font-sans" style={{ pageBreakBefore: 'always' }}>
+          {/* e-Way Bill Header */}
+          <div className="flex justify-between items-start mb-6">
+            <h1 className="text-xl font-bold">e-Way Bill</h1>
+            <span className="text-sm font-semibold">e-Way Bill</span>
+          </div>
+
+          {/* Document Info */}
+          <div className="mb-4 text-sm">
+            <p><strong>Doc No.:</strong> Tax Invoice - {invoiceNo}</p>
+            <p><strong>Date:</strong> {format(new Date(invoice.invoice_date), 'dd-MMM-yyyy')}</p>
+          </div>
+
+          <hr className="border-gray-400 my-4" />
+
+          {/* 1. e-Way Bill Details */}
+          <div className="mb-6">
+            <h2 className="font-bold mb-3">1. e-Way Bill Details</h2>
+            <div className="grid grid-cols-3 gap-4 text-sm">
+              <div>
+                <p><strong>e-Way Bill No.:</strong> {invoice.eway_bill_no}</p>
+                <p><strong>Mode:</strong> {invoice.dispatched_through ? `1 - ${invoice.dispatched_through}` : '-'}</p>
+              </div>
+              <div>
+                <p><strong>Generated Date:</strong> {format(new Date(invoice.invoice_date), 'dd-MMM-yyyy')}</p>
+              </div>
+              <div>
+                <p><strong>Valid Upto:</strong> -</p>
+              </div>
+            </div>
+          </div>
+
+          <hr className="border-gray-400 my-4" />
+
+          {/* 2. Address Details */}
+          <div className="mb-6">
+            <h2 className="font-bold mb-3">2. Address Details</h2>
+            <div className="grid grid-cols-2 gap-8 text-sm">
+              <div>
+                <p className="font-semibold mb-2">From</p>
+                <p>{companySettings.company_name}</p>
+                <p>GSTIN: {companySettings.gstin}</p>
+                <p>{stateName}</p>
+              </div>
+              <div>
+                <p className="font-semibold mb-2">To</p>
+                <p>{invoice.client_name}</p>
+                {invoice.gstin && <p>GSTIN: {invoice.gstin}</p>}
+                <p>{stateName}</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-8 text-sm mt-4">
+              <div>
+                <p className="font-semibold mb-2">Dispatch From</p>
+                <p>{companySettings.address}</p>
+              </div>
+              <div>
+                <p className="font-semibold mb-2">Ship To</p>
+                <p>{invoice.ship_address || companySettings.address}</p>
+              </div>
+            </div>
+          </div>
+
+          <hr className="border-gray-400 my-4" />
+
+          {/* 3. Goods Details */}
+          <div className="mb-6">
+            <h2 className="font-bold mb-3">3. Goods Details</h2>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-gray-400">
+                  <th className="text-left p-2">HSN Code</th>
+                  <th className="text-left p-2">Product Name & Desc</th>
+                  <th className="text-right p-2">Quantity</th>
+                  <th className="text-right p-2">Taxable Amt</th>
+                  <th className="text-right p-2">Tax Rate (%)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {invoice.invoice_items
+                  .sort((a, b) => a.sort_order - b.sort_order)
+                  .map((item) => (
+                    <tr key={item.id}>
+                      <td className="p-2">{item.hsn_code || '-'}</td>
+                      <td className="p-2">{item.product_name}</td>
+                      <td className="p-2 text-right">{item.quantity} {item.unit}</td>
+                      <td className="p-2 text-right">{item.total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                      <td className="p-2 text-right">18</td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+
+          <hr className="border-gray-400 my-4" />
+
+          {/* Summary */}
+          <div className="flex justify-between text-sm mb-6">
+            <div>
+              <p><strong>Tot. Taxable Amt:</strong> {taxableAmount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
+              <p><strong>CGST Amt:</strong> {invoice.cgst_amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
+              <p><strong>SGST Amt:</strong> {invoice.sgst_amount.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
+            </div>
+            <div>
+              <p><strong>Other Amt:</strong> {roundOff !== 0 ? roundOff.toFixed(2) : '0.00'}</p>
+            </div>
+            <div className="text-right">
+              <p><strong>Total Inv Amt:</strong> {roundedTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</p>
+            </div>
+          </div>
+
+          <hr className="border-gray-400 my-4" />
+
+          {/* 4. Transportation Details */}
+          <div className="mb-6">
+            <h2 className="font-bold mb-3">4. Transportation Details</h2>
+            <div className="grid grid-cols-2 gap-8 text-sm">
+              <div>
+                <p><strong>Transporter Name:</strong> {invoice.dispatched_through || '-'}</p>
+              </div>
+              <div>
+                <p><strong>Doc No.:</strong> {invoice.lr_no || '-'}</p>
+                <p><strong>Date:</strong> {format(new Date(invoice.invoice_date), 'dd-MMM-yyyy')}</p>
+              </div>
+            </div>
+          </div>
+
+          <hr className="border-gray-400 my-4" />
+
+          {/* 5. Vehicle Details */}
+          <div className="mb-6">
+            <h2 className="font-bold mb-3">5. Vehicle Details</h2>
+            <div className="grid grid-cols-3 gap-4 text-sm">
+              <div>
+                <p><strong>Vehicle No.:</strong> {invoice.vehicle_no || '-'}</p>
+              </div>
+              <div>
+                <p><strong>From:</strong> {invoice.destination || '-'}</p>
+              </div>
+              <div>
+                <p><strong>CEWB No.:</strong> -</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
