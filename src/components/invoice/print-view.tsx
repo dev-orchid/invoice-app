@@ -148,30 +148,36 @@ export function PrintView({ invoice, companySettings }: PrintViewProps) {
   const stateCode = companySettings.state_code || '10'
 
   return (
-    <div className="bg-white min-h-screen">
+    <div className="bg-white min-h-screen overflow-auto">
       <style jsx global>{`
+        html, body {
+          overflow: auto !important;
+          height: auto !important;
+        }
         @media print {
           html, body {
             background: white;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
-            margin: 0;
-            padding: 0;
+            overflow: visible !important;
+            height: auto !important;
           }
           .no-print { display: none !important; }
-          .print-container {
-            padding: 10mm !important;
-            max-width: none !important;
-            margin: 0 !important;
+          .invoice-page {
+            page-break-after: auto;
+            page-break-inside: auto;
+          }
+          .eway-page {
+            page-break-before: always;
           }
         }
         @page {
           size: A4;
-          margin: 0;
+          margin: 10mm;
         }
       `}</style>
 
-      <div className="no-print p-4 bg-gray-100">
+      <div className="no-print p-4 bg-gray-100 sticky top-0 z-10">
         <button
           onClick={() => window.print()}
           className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 font-medium"
@@ -180,31 +186,31 @@ export function PrintView({ invoice, companySettings }: PrintViewProps) {
         </button>
       </div>
 
-      <div className="print-container max-w-4xl mx-auto p-8 text-[11px] leading-snug font-sans">
+      <div className="invoice-page max-w-4xl mx-auto px-6 py-4 text-[11px] leading-tight font-sans">
         {/* Main Invoice Container */}
         <div className="border border-gray-400">
           {/* Company Header */}
-          <div className="text-center py-3 px-4 border-b border-gray-400">
-            <h1 className="text-2xl font-bold">{companySettings.company_name}</h1>
-            <p className="text-xs mt-1">{companySettings.address}</p>
-            {companySettings.phone && <p className="text-xs">Contact: {companySettings.phone}</p>}
-            <p className="text-xs">
+          <div className="text-center py-2 px-3 border-b border-gray-400">
+            <h1 className="text-xl font-bold">{companySettings.company_name}</h1>
+            <p className="text-[10px] mt-0.5">{companySettings.address}</p>
+            {companySettings.phone && <p className="text-[10px]">Contact: {companySettings.phone}</p>}
+            <p className="text-[10px]">
               <strong>GSTIN:</strong> {companySettings.gstin} &nbsp;&nbsp;&nbsp; <strong>State:</strong> {stateName} ({stateCode})
             </p>
           </div>
 
           {/* Tax Invoice Title */}
-          <div className="text-center py-2 border-b border-gray-400">
-            <h2 className="text-base font-bold">TAX INVOICE</h2>
+          <div className="text-center py-1 border-b border-gray-400">
+            <h2 className="text-sm font-bold">TAX INVOICE</h2>
           </div>
 
           {/* Two Column Layout - Consignee/Buyer and Invoice Details */}
           <div className="flex border-b border-gray-400">
             {/* Left Column - Consignee and Buyer */}
-            <div className="w-1/2 border-r border-gray-400">
+            <div className="w-1/2 border-r border-gray-400 text-[10px]">
               {/* Consignee */}
-              <div className="p-3 border-b border-gray-400">
-                <p className="font-bold mb-1">Consignee (Ship to)</p>
+              <div className="p-2 border-b border-gray-400">
+                <p className="font-bold">Consignee (Ship to)</p>
                 <p className="font-semibold">{invoice.client_name}</p>
                 {invoice.ship_address && <p>{invoice.ship_address}</p>}
                 {invoice.gstin && <p><strong>GSTIN/UIN:</strong> {invoice.gstin}</p>}
@@ -212,8 +218,8 @@ export function PrintView({ invoice, companySettings }: PrintViewProps) {
                 {invoice.client_contact && <p><strong>Contact:</strong> {invoice.client_contact}</p>}
               </div>
               {/* Buyer */}
-              <div className="p-3">
-                <p className="font-bold mb-1">Buyer (Bill to)</p>
+              <div className="p-2">
+                <p className="font-bold">Buyer (Bill to)</p>
                 <p className="font-semibold">{invoice.client_name}</p>
                 {invoice.ship_address && <p>{invoice.ship_address}</p>}
                 {invoice.gstin && <p><strong>GSTIN/UIN:</strong> {invoice.gstin}</p>}
@@ -223,46 +229,46 @@ export function PrintView({ invoice, companySettings }: PrintViewProps) {
             </div>
 
             {/* Right Column - Invoice Details */}
-            <div className="w-1/2">
+            <div className="w-1/2 text-[10px]">
               <table className="w-full h-full">
                 <tbody>
                   <tr className="border-b border-gray-400">
-                    <td className="p-2 border-r border-gray-400 font-semibold w-1/2">Invoice No.</td>
-                    <td className="p-2">{invoiceNo}</td>
+                    <td className="p-1.5 border-r border-gray-400 font-semibold w-1/2">Invoice No.</td>
+                    <td className="p-1.5">{invoiceNo}</td>
                   </tr>
                   <tr className="border-b border-gray-400">
-                    <td className="p-2 border-r border-gray-400 font-semibold">Dated</td>
-                    <td className="p-2">{format(new Date(invoice.invoice_date), 'dd-MMM-yyyy')}</td>
+                    <td className="p-1.5 border-r border-gray-400 font-semibold">Dated</td>
+                    <td className="p-1.5">{format(new Date(invoice.invoice_date), 'dd-MMM-yyyy')}</td>
                   </tr>
                   {invoice.eway_bill_no && (
                     <tr className="border-b border-gray-400">
-                      <td className="p-2 border-r border-gray-400 font-semibold">e-Way Bill No.</td>
-                      <td className="p-2">{invoice.eway_bill_no}</td>
+                      <td className="p-1.5 border-r border-gray-400 font-semibold">e-Way Bill No.</td>
+                      <td className="p-1.5">{invoice.eway_bill_no}</td>
                     </tr>
                   )}
                   <tr className="border-b border-gray-400">
-                    <td className="p-2 border-r border-gray-400 font-semibold">Mode/Terms of Payment</td>
-                    <td className="p-2">{invoice.payment_terms || '-'}</td>
+                    <td className="p-1.5 border-r border-gray-400 font-semibold">Mode/Terms of Payment</td>
+                    <td className="p-1.5">{invoice.payment_terms || '-'}</td>
                   </tr>
                   <tr className="border-b border-gray-400">
-                    <td className="p-2 border-r border-gray-400 font-semibold">Dispatched through</td>
-                    <td className="p-2">{invoice.dispatched_through || '-'}</td>
+                    <td className="p-1.5 border-r border-gray-400 font-semibold">Dispatched through</td>
+                    <td className="p-1.5">{invoice.dispatched_through || '-'}</td>
                   </tr>
                   <tr className="border-b border-gray-400">
-                    <td className="p-2 border-r border-gray-400 font-semibold">Destination</td>
-                    <td className="p-2">{invoice.destination || '-'}</td>
+                    <td className="p-1.5 border-r border-gray-400 font-semibold">Destination</td>
+                    <td className="p-1.5">{invoice.destination || '-'}</td>
                   </tr>
                   <tr className="border-b border-gray-400">
-                    <td className="p-2 border-r border-gray-400 font-semibold">LR No.</td>
-                    <td className="p-2">{invoice.lr_no || '-'}</td>
+                    <td className="p-1.5 border-r border-gray-400 font-semibold">LR No.</td>
+                    <td className="p-1.5">{invoice.lr_no || '-'}</td>
                   </tr>
                   <tr className="border-b border-gray-400">
-                    <td className="p-2 border-r border-gray-400 font-semibold">Vehicle No.</td>
-                    <td className="p-2">{invoice.vehicle_no || '-'}</td>
+                    <td className="p-1.5 border-r border-gray-400 font-semibold">Vehicle No.</td>
+                    <td className="p-1.5">{invoice.vehicle_no || '-'}</td>
                   </tr>
                   <tr>
-                    <td className="p-2 border-r border-gray-400 font-semibold">Terms of Delivery</td>
-                    <td className="p-2">{invoice.terms_of_delivery || '-'}</td>
+                    <td className="p-1.5 border-r border-gray-400 font-semibold">Terms of Delivery</td>
+                    <td className="p-1.5">{invoice.terms_of_delivery || '-'}</td>
                   </tr>
                 </tbody>
               </table>
@@ -270,16 +276,16 @@ export function PrintView({ invoice, companySettings }: PrintViewProps) {
           </div>
 
           {/* Products Table */}
-          <table className="w-full border-b border-gray-400">
+          <table className="w-full border-b border-gray-400 text-[10px]">
             <thead>
               <tr className="border-b border-gray-400 bg-gray-50">
-                <th className="p-2 text-center border-r border-gray-400 w-[8%] font-semibold">Sl No.</th>
-                <th className="p-2 text-left border-r border-gray-400 font-semibold">Description of Goods</th>
-                <th className="p-2 text-center border-r border-gray-400 w-[12%] font-semibold">HSN/SAC</th>
-                <th className="p-2 text-right border-r border-gray-400 w-[10%] font-semibold">Quantity</th>
-                <th className="p-2 text-right border-r border-gray-400 w-[10%] font-semibold">Rate</th>
-                <th className="p-2 text-center border-r border-gray-400 w-[8%] font-semibold">per</th>
-                <th className="p-2 text-right w-[14%] font-semibold">Amount</th>
+                <th className="p-1.5 text-center border-r border-gray-400 w-[6%] font-semibold">Sl</th>
+                <th className="p-1.5 text-left border-r border-gray-400 font-semibold">Description of Goods</th>
+                <th className="p-1.5 text-center border-r border-gray-400 w-[12%] font-semibold">HSN/SAC</th>
+                <th className="p-1.5 text-right border-r border-gray-400 w-[10%] font-semibold">Qty</th>
+                <th className="p-1.5 text-right border-r border-gray-400 w-[10%] font-semibold">Rate</th>
+                <th className="p-1.5 text-center border-r border-gray-400 w-[6%] font-semibold">per</th>
+                <th className="p-1.5 text-right w-[14%] font-semibold">Amount</th>
               </tr>
             </thead>
             <tbody>
@@ -287,142 +293,142 @@ export function PrintView({ invoice, companySettings }: PrintViewProps) {
                 .sort((a, b) => a.sort_order - b.sort_order)
                 .map((item, index) => (
                   <tr key={item.id} className="border-b border-gray-400">
-                    <td className="p-2 text-center border-r border-gray-400">{index + 1}</td>
-                    <td className="p-2 border-r border-gray-400">{item.product_name}</td>
-                    <td className="p-2 text-center border-r border-gray-400">{item.hsn_code || ''}</td>
-                    <td className="p-2 text-right border-r border-gray-400">{item.quantity.toFixed(2)}</td>
-                    <td className="p-2 text-right border-r border-gray-400">{item.rate.toFixed(2)}</td>
-                    <td className="p-2 text-center border-r border-gray-400">{item.unit}</td>
-                    <td className="p-2 text-right">{item.total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td className="p-1.5 text-center border-r border-gray-400">{index + 1}</td>
+                    <td className="p-1.5 border-r border-gray-400">{item.product_name}</td>
+                    <td className="p-1.5 text-center border-r border-gray-400">{item.hsn_code || ''}</td>
+                    <td className="p-1.5 text-right border-r border-gray-400">{item.quantity.toFixed(2)}</td>
+                    <td className="p-1.5 text-right border-r border-gray-400">{item.rate.toFixed(2)}</td>
+                    <td className="p-1.5 text-center border-r border-gray-400">{item.unit}</td>
+                    <td className="p-1.5 text-right">{item.total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   </tr>
                 ))}
 
               {/* Sub Total */}
               <tr className="border-b border-gray-400">
-                <td className="p-2 border-r border-gray-400"></td>
-                <td className="p-2 border-r border-gray-400 text-right font-semibold" colSpan={5}>Sub Total</td>
-                <td className="p-2 text-right">{taxableAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td className="p-1.5 border-r border-gray-400"></td>
+                <td className="p-1.5 border-r border-gray-400 text-right font-semibold" colSpan={5}>Sub Total</td>
+                <td className="p-1.5 text-right">{taxableAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
               </tr>
 
               {/* CGST */}
               <tr className="border-b border-gray-400">
-                <td className="p-2 border-r border-gray-400"></td>
-                <td className="p-2 border-r border-gray-400 text-right" colSpan={5}>CGST @ 9%</td>
-                <td className="p-2 text-right">{invoice.cgst_amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td className="p-1.5 border-r border-gray-400"></td>
+                <td className="p-1.5 border-r border-gray-400 text-right" colSpan={5}>CGST @ 9%</td>
+                <td className="p-1.5 text-right">{invoice.cgst_amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
               </tr>
 
               {/* SGST */}
               <tr className="border-b border-gray-400">
-                <td className="p-2 border-r border-gray-400"></td>
-                <td className="p-2 border-r border-gray-400 text-right" colSpan={5}>SGST @ 9%</td>
-                <td className="p-2 text-right">{invoice.sgst_amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td className="p-1.5 border-r border-gray-400"></td>
+                <td className="p-1.5 border-r border-gray-400 text-right" colSpan={5}>SGST @ 9%</td>
+                <td className="p-1.5 text-right">{invoice.sgst_amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
               </tr>
 
               {/* Round Off */}
               {roundOff !== 0 && (
                 <tr className="border-b border-gray-400">
-                  <td className="p-2 border-r border-gray-400"></td>
-                  <td className="p-2 border-r border-gray-400 text-right" colSpan={5}>Round Off</td>
-                  <td className="p-2 text-right">{roundOff >= 0 ? '+' : ''}{roundOff.toFixed(2)}</td>
+                  <td className="p-1.5 border-r border-gray-400"></td>
+                  <td className="p-1.5 border-r border-gray-400 text-right" colSpan={5}>Round Off</td>
+                  <td className="p-1.5 text-right">{roundOff >= 0 ? '+' : ''}{roundOff.toFixed(2)}</td>
                 </tr>
               )}
 
               {/* Total */}
               <tr className="border-b border-gray-400">
-                <td className="p-2 border-r border-gray-400"></td>
-                <td className="p-2 border-r border-gray-400 text-right font-bold" colSpan={5}>Total</td>
-                <td className="p-2 text-right font-bold">&#x20B9; {roundedTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td className="p-1.5 border-r border-gray-400"></td>
+                <td className="p-1.5 border-r border-gray-400 text-right font-bold" colSpan={5}>Total</td>
+                <td className="p-1.5 text-right font-bold">&#x20B9; {roundedTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
               </tr>
             </tbody>
           </table>
 
           {/* Amount in Words */}
-          <div className="p-3 border-b border-gray-400">
+          <div className="p-2 border-b border-gray-400 text-[10px]">
             <p><strong>Amount Chargeable (in words):</strong></p>
             <p className="font-bold">{numberToWords(roundedTotal)}</p>
           </div>
 
           {/* HSN Summary Table */}
-          <table className="w-full border-b border-gray-400 text-[10px]">
+          <table className="w-full border-b border-gray-400 text-[9px]">
             <thead>
               <tr className="border-b border-gray-400">
-                <th className="p-2 text-left border-r border-gray-400 font-semibold" rowSpan={2}>HSN/SAC</th>
-                <th className="p-2 text-right border-r border-gray-400 font-semibold" rowSpan={2}>Taxable Value</th>
-                <th className="p-2 text-center border-r border-gray-400 font-semibold" colSpan={2}>CGST</th>
-                <th className="p-2 text-center border-r border-gray-400 font-semibold" colSpan={2}>SGST</th>
-                <th className="p-2 text-right font-semibold" rowSpan={2}>Total Tax Amount</th>
+                <th className="p-1 text-left border-r border-gray-400 font-semibold" rowSpan={2}>HSN/SAC</th>
+                <th className="p-1 text-right border-r border-gray-400 font-semibold" rowSpan={2}>Taxable Value</th>
+                <th className="p-1 text-center border-r border-gray-400 font-semibold" colSpan={2}>CGST</th>
+                <th className="p-1 text-center border-r border-gray-400 font-semibold" colSpan={2}>SGST</th>
+                <th className="p-1 text-right font-semibold" rowSpan={2}>Total Tax Amount</th>
               </tr>
               <tr className="border-b border-gray-400">
-                <th className="p-2 text-center border-r border-gray-400 font-semibold">Rate</th>
-                <th className="p-2 text-right border-r border-gray-400 font-semibold">Amount</th>
-                <th className="p-2 text-center border-r border-gray-400 font-semibold">Rate</th>
-                <th className="p-2 text-right border-r border-gray-400 font-semibold">Amount</th>
+                <th className="p-1 text-center border-r border-gray-400 font-semibold">Rate</th>
+                <th className="p-1 text-right border-r border-gray-400 font-semibold">Amount</th>
+                <th className="p-1 text-center border-r border-gray-400 font-semibold">Rate</th>
+                <th className="p-1 text-right border-r border-gray-400 font-semibold">Amount</th>
               </tr>
             </thead>
             <tbody>
               {hsnSummary.map((hsn, index) => (
                 <tr key={index} className="border-b border-gray-400">
-                  <td className="p-2 border-r border-gray-400">{hsn.hsn_code}</td>
-                  <td className="p-2 text-right border-r border-gray-400">{hsn.taxable_value.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                  <td className="p-2 text-center border-r border-gray-400">{hsn.cgst_rate}%</td>
-                  <td className="p-2 text-right border-r border-gray-400">{hsn.cgst_amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                  <td className="p-2 text-center border-r border-gray-400">{hsn.sgst_rate}%</td>
-                  <td className="p-2 text-right border-r border-gray-400">{hsn.sgst_amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                  <td className="p-2 text-right">{hsn.total_tax.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                  <td className="p-1 border-r border-gray-400">{hsn.hsn_code}</td>
+                  <td className="p-1 text-right border-r border-gray-400">{hsn.taxable_value.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                  <td className="p-1 text-center border-r border-gray-400">{hsn.cgst_rate}%</td>
+                  <td className="p-1 text-right border-r border-gray-400">{hsn.cgst_amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                  <td className="p-1 text-center border-r border-gray-400">{hsn.sgst_rate}%</td>
+                  <td className="p-1 text-right border-r border-gray-400">{hsn.sgst_amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                  <td className="p-1 text-right">{hsn.total_tax.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                 </tr>
               ))}
               <tr>
-                <td className="p-2 border-r border-gray-400 font-bold">Total</td>
-                <td className="p-2 text-right border-r border-gray-400 font-bold">{taxableAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                <td className="p-2 border-r border-gray-400"></td>
-                <td className="p-2 text-right border-r border-gray-400 font-bold">{invoice.cgst_amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                <td className="p-2 border-r border-gray-400"></td>
-                <td className="p-2 text-right border-r border-gray-400 font-bold">{invoice.sgst_amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                <td className="p-2 text-right font-bold">{invoice.gst_amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td className="p-1 border-r border-gray-400 font-bold">Total</td>
+                <td className="p-1 text-right border-r border-gray-400 font-bold">{taxableAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td className="p-1 border-r border-gray-400"></td>
+                <td className="p-1 text-right border-r border-gray-400 font-bold">{invoice.cgst_amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td className="p-1 border-r border-gray-400"></td>
+                <td className="p-1 text-right border-r border-gray-400 font-bold">{invoice.sgst_amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td className="p-1 text-right font-bold">{invoice.gst_amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
               </tr>
             </tbody>
           </table>
 
           {/* Tax Amount in Words */}
-          <div className="p-3 border-b border-gray-400 text-[10px]">
+          <div className="p-1.5 border-b border-gray-400 text-[9px]">
             <p><strong>Tax Amount (in words):</strong> {numberToWords(invoice.gst_amount)}</p>
           </div>
 
           {/* Footer - Three Columns */}
-          <div className="flex">
+          <div className="flex text-[9px]">
             {/* Remarks */}
-            <div className="w-1/3 p-3 border-r border-gray-400">
-              <p className="font-bold mb-1">Remarks:</p>
+            <div className="w-1/3 p-2 border-r border-gray-400">
+              <p className="font-bold">Remarks:</p>
               <p>Invoice No: {invoiceNo}</p>
             </div>
 
             {/* Declaration */}
-            <div className="w-1/3 p-3 border-r border-gray-400">
-              <p className="font-bold underline mb-1">Declaration</p>
-              <p className="text-[9px]">
+            <div className="w-1/3 p-2 border-r border-gray-400">
+              <p className="font-bold underline">Declaration</p>
+              <p className="text-[8px]">
                 {companySettings.declaration || 'We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct.'}
               </p>
             </div>
 
             {/* Bank Details and Signature */}
-            <div className="w-1/3 p-3">
-              <p className="font-bold mb-1">Company&apos;s Bank Details</p>
+            <div className="w-1/3 p-2">
+              <p className="font-bold">Company&apos;s Bank Details</p>
               {companySettings.account_holder_name && (
-                <p className="text-[9px]"><strong>A/c Holder&apos;s Name:</strong> {companySettings.account_holder_name}</p>
+                <p className="text-[8px]"><strong>A/c Holder:</strong> {companySettings.account_holder_name}</p>
               )}
               {companySettings.bank_name && (
-                <p className="text-[9px]"><strong>Bank Name:</strong> {companySettings.bank_name}</p>
+                <p className="text-[8px]"><strong>Bank:</strong> {companySettings.bank_name}</p>
               )}
               {companySettings.account_number && (
-                <p className="text-[9px]"><strong>A/c No.:</strong> {companySettings.account_number}</p>
+                <p className="text-[8px]"><strong>A/c No.:</strong> {companySettings.account_number}</p>
               )}
               {(companySettings.branch_name || companySettings.ifsc_code) && (
-                <p className="text-[9px]"><strong>Branch & IFSC:</strong> {companySettings.branch_name}{companySettings.branch_name && companySettings.ifsc_code ? ' & ' : ''}{companySettings.ifsc_code}</p>
+                <p className="text-[8px]"><strong>Branch & IFSC:</strong> {companySettings.branch_name}{companySettings.branch_name && companySettings.ifsc_code ? ' & ' : ''}{companySettings.ifsc_code}</p>
               )}
 
-              <div className="mt-6 text-right">
-                <p className="font-bold">For {companySettings.company_name}</p>
-                <div className="h-12"></div>
+              <div className="mt-4 text-right">
+                <p className="font-bold text-[8px]">For {companySettings.company_name}</p>
+                <div className="h-8"></div>
                 <p>Authorised Signatory</p>
               </div>
             </div>
@@ -430,7 +436,7 @@ export function PrintView({ invoice, companySettings }: PrintViewProps) {
         </div>
 
         {/* Footer text outside box */}
-        <div className="text-center mt-3 text-[9px] text-gray-500">
+        <div className="text-center mt-2 text-[8px] text-gray-500">
           <p>SUBJECT TO {stateName.toUpperCase()} JURISDICTION</p>
           <p>This is a Computer Generated Invoice</p>
         </div>
@@ -439,7 +445,7 @@ export function PrintView({ invoice, companySettings }: PrintViewProps) {
 
       {/* e-Way Bill Page - Only shown when e-Way Bill number exists */}
       {invoice.eway_bill_no && (
-        <div className="print-container max-w-4xl mx-auto p-8 text-[11px] leading-snug font-sans" style={{ pageBreakBefore: 'always' }}>
+        <div className="eway-page max-w-4xl mx-auto px-6 py-4 text-[11px] leading-tight font-sans">
           {/* e-Way Bill Header */}
           <div className="flex justify-between items-start mb-6">
             <h1 className="text-xl font-bold">e-Way Bill</h1>
