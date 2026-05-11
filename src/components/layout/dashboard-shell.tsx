@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Sidebar } from './sidebar'
 import { Header } from './header'
+import { NavigationLoader } from './navigation-loader'
 
 interface DashboardShellProps {
   children: React.ReactNode
@@ -40,8 +41,9 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
       {/* Main content */}
       <div className="flex flex-1 flex-col overflow-hidden min-w-0">
         <Header user={user} onMenuClick={() => setSidebarOpen(true)} />
-        <main className="flex-1 overflow-y-auto bg-muted/30 p-4 md:p-6 min-h-0" style={{ WebkitOverflowScrolling: 'touch' }}>
+        <main className="relative flex-1 overflow-y-auto bg-muted/30 p-4 md:p-6 min-h-0" style={{ WebkitOverflowScrolling: 'touch' }}>
           {children}
+          <NavigationLoader />
         </main>
         <footer className="shrink-0 border-t bg-card py-3 px-4 text-center text-sm text-muted-foreground">
           Copyright © 2025{' '}
