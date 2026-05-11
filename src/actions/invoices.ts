@@ -3,16 +3,23 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { invoiceSchema, type InvoiceFormData } from '@/lib/validations/invoice'
+import { getFinancialYearRange } from '@/lib/utils'
 
-export async function getNextInvoiceNumber() {
+// Returns the next sequential invoice number within the Indian financial
+// year (Apr 1 – Mar 31) containing `forDate` (defaults to today). Resets to
+// 1 at the start of each new FY.
+export async function getNextInvoiceNumber(forDate?: string) {
   const supabase = await createClient()
+  const { start, end } = getFinancialYearRange(forDate || new Date())
 
   const { data } = await supabase
     .from('invoices')
     .select('invoice_number')
+    .gte('invoice_date', start)
+    .lte('invoice_date', end)
     .order('invoice_number', { ascending: false })
     .limit(1)
-    .single()
+    .maybeSingle()
 
   return (data?.invoice_number || 0) + 1
 }

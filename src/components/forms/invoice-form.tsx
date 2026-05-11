@@ -25,8 +25,9 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Trash2, Plus, Loader2, ChevronDown, ChevronRight, Truck } from 'lucide-react'
-import { createInvoice, updateInvoice } from '@/actions/invoices'
+import { createInvoice, updateInvoice, getNextInvoiceNumber } from '@/actions/invoices'
 import { invoiceSchema, type InvoiceFormData } from '@/lib/validations/invoice'
+import { formatInvoiceNumber } from '@/lib/utils'
 import { toast } from 'sonner'
 
 const GST_RATE = 0.18 // 18% GST
@@ -152,6 +153,24 @@ export function InvoiceForm({ initialData, nextInvoiceNumber }: InvoiceFormProps
   const watchItems = form.watch('items')
   const watchDiscount = form.watch('discount') || 0
   const watchPaidAmount = form.watch('paid_amount') || 0
+  const watchInvoiceNumber = form.watch('invoice_number') || 0
+  const watchInvoiceDate = form.watch('invoice_date')
+
+  // In create mode, recompute the next number when the user changes the date
+  // to a different financial year (so April-onward dates start fresh at 1).
+  useEffect(() => {
+    if (initialData || !watchInvoiceDate) return
+    if (form.formState.dirtyFields.invoice_number) return
+    let cancelled = false
+    getNextInvoiceNumber(watchInvoiceDate).then((next) => {
+      if (cancelled) return
+      if (form.formState.dirtyFields.invoice_number) return
+      form.setValue('invoice_number', next, { shouldDirty: false })
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [watchInvoiceDate, initialData, form])
 
   // Calculate totals
   const subTotal = watchItems.reduce(
@@ -202,8 +221,13 @@ export function InvoiceForm({ initialData, nextInvoiceNumber }: InvoiceFormProps
             <Input
               type="number"
               {...form.register('invoice_number', { valueAsNumber: true })}
-              placeholder="e.g., 81"
+              placeholder="e.g., 1"
             />
+            {watchInvoiceNumber > 0 && watchInvoiceDate && (
+              <p className="text-xs text-muted-foreground">
+                Will be saved as {formatInvoiceNumber(watchInvoiceNumber, watchInvoiceDate)}
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="invoice_date">Invoice Date</Label>

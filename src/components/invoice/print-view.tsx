@@ -1,6 +1,7 @@
 'use client'
 
 import { format } from 'date-fns'
+import { formatInvoiceNumber } from '@/lib/utils'
 
 function numberToWords(num: number): string {
   const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten',
@@ -102,13 +103,7 @@ interface HSNSummary {
 
 export function PrintView({ invoice, companySettings }: PrintViewProps) {
   const taxableAmount = invoice.sub_total - invoice.discount
-  const financialYear = new Date(invoice.invoice_date).getFullYear()
-  const month = new Date(invoice.invoice_date).getMonth()
-  // Financial year starts in April
-  const fyStart = month >= 3 ? financialYear : financialYear - 1
-  const fyEnd = fyStart + 1
-  // Format: SJMW/81/25-26 (invoice_number/short_year_start-short_year_end)
-  const invoiceNo = `SJMW/${invoice.invoice_number}/${String(fyStart).slice(-2)}-${String(fyEnd).slice(-2)}`
+  const invoiceNo = formatInvoiceNumber(invoice.invoice_number, invoice.invoice_date)
 
   // Calculate round off
   const exactTotal = taxableAmount + invoice.gst_amount

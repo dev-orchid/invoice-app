@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { InvoiceForm } from '@/components/forms/invoice-form'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft } from 'lucide-react'
+import { formatInvoiceNumber } from '@/lib/utils'
 
 export default async function EditInvoicePage({
   params,
@@ -38,7 +39,7 @@ export default async function EditInvoicePage({
         </Button>
         <div>
           <h2 className="text-2xl font-bold tracking-tight">
-            Edit Invoice #{String(invoice.invoice_number).padStart(4, '0')}
+            Edit {formatInvoiceNumber(invoice.invoice_number, invoice.invoice_date)}
           </h2>
           <p className="text-muted-foreground">Update the invoice details.</p>
         </div>

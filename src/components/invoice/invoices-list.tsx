@@ -23,6 +23,7 @@ import {
 import { Eye, Pencil, Printer, Search, X, ChevronLeft, ChevronRight } from 'lucide-react'
 import { format } from 'date-fns'
 import { DeleteInvoiceButton } from '@/components/invoice/delete-invoice-button'
+import { formatInvoiceNumber } from '@/lib/utils'
 
 interface Invoice {
   id: string
@@ -52,7 +53,7 @@ export function InvoicesList({ invoices }: InvoicesListProps) {
     return invoices.filter((invoice) => {
       const matchesSearch =
         invoice.client_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        `INV-${String(invoice.invoice_number).padStart(4, '0')}`
+        formatInvoiceNumber(invoice.invoice_number, invoice.invoice_date)
           .toLowerCase()
           .includes(searchQuery.toLowerCase())
 
@@ -108,7 +109,7 @@ export function InvoicesList({ invoices }: InvoicesListProps) {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search by client name or invoice number..."
+            placeholder="Search by client name or invoice no (e.g., SJMW/01/26-27)..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9"
@@ -166,7 +167,7 @@ export function InvoicesList({ invoices }: InvoicesListProps) {
                 {paginatedInvoices.map((invoice) => (
                   <TableRow key={invoice.id}>
                     <TableCell className="font-medium whitespace-nowrap">
-                      INV-{String(invoice.invoice_number).padStart(4, '0')}
+                      {formatInvoiceNumber(invoice.invoice_number, invoice.invoice_date)}
                     </TableCell>
                     <TableCell className="whitespace-nowrap">
                       {format(new Date(invoice.invoice_date), 'dd/MM/yyyy')}

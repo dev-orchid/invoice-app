@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Pencil, Printer, ArrowLeft } from 'lucide-react'
 import { format } from 'date-fns'
+import { formatInvoiceNumber } from '@/lib/utils'
 
 export default async function ViewInvoicePage({
   params,
@@ -54,7 +55,7 @@ export default async function ViewInvoicePage({
           </Button>
           <div>
             <h2 className="text-2xl font-bold tracking-tight">
-              Invoice #{String(invoice.invoice_number).padStart(4, '0')}
+              {formatInvoiceNumber(invoice.invoice_number, invoice.invoice_date)}
             </h2>
             <p className="text-muted-foreground">
               Created on {format(new Date(invoice.created_at), 'dd MMM yyyy')}

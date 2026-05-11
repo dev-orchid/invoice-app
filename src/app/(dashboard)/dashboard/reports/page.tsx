@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge'
 import { FileText, Loader2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { format } from 'date-fns'
+import { formatInvoiceNumber } from '@/lib/utils'
 
 interface Invoice {
   id: string
@@ -181,7 +182,7 @@ export default function ReportsPage() {
                     {invoices.map((invoice) => (
                       <TableRow key={invoice.id}>
                         <TableCell className="font-medium">
-                          INV-{String(invoice.invoice_number).padStart(4, '0')}
+                          {formatInvoiceNumber(invoice.invoice_number, invoice.invoice_date)}
                         </TableCell>
                         <TableCell>
                           {format(new Date(invoice.invoice_date), 'dd/MM/yyyy')}
