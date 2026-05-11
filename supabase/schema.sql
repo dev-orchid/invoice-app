@@ -18,52 +18,6 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 );
 
 -- =============================================
--- BRANDS TABLE
--- =============================================
-CREATE TABLE IF NOT EXISTS public.brands (
-    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    is_active BOOLEAN DEFAULT true,
-    is_deleted BOOLEAN DEFAULT false,
-    created_by UUID REFERENCES public.profiles(id),
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- =============================================
--- CATEGORIES TABLE
--- =============================================
-CREATE TABLE IF NOT EXISTS public.categories (
-    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    is_active BOOLEAN DEFAULT true,
-    is_deleted BOOLEAN DEFAULT false,
-    created_by UUID REFERENCES public.profiles(id),
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- =============================================
--- PRODUCTS TABLE
--- =============================================
-CREATE TABLE IF NOT EXISTS public.products (
-    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    image_url TEXT,
-    brand_id UUID REFERENCES public.brands(id) ON DELETE SET NULL,
-    category_id UUID REFERENCES public.categories(id) ON DELETE SET NULL,
-    quantity INTEGER DEFAULT 0,
-    rate DECIMAL(10, 2) NOT NULL,
-    hsn_code VARCHAR(50),
-    unit VARCHAR(20) DEFAULT 'KGS',
-    is_active BOOLEAN DEFAULT true,
-    is_deleted BOOLEAN DEFAULT false,
-    created_by UUID REFERENCES public.profiles(id),
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- =============================================
 -- INVOICES TABLE
 -- =============================================
 CREATE TABLE IF NOT EXISTS public.invoices (
@@ -144,8 +98,6 @@ CREATE INDEX IF NOT EXISTS idx_invoices_date ON public.invoices(invoice_date);
 CREATE INDEX IF NOT EXISTS idx_invoices_client ON public.invoices(client_name);
 CREATE INDEX IF NOT EXISTS idx_invoices_created_by ON public.invoices(created_by);
 CREATE INDEX IF NOT EXISTS idx_invoice_items_invoice ON public.invoice_items(invoice_id);
-CREATE INDEX IF NOT EXISTS idx_products_brand ON public.products(brand_id);
-CREATE INDEX IF NOT EXISTS idx_products_category ON public.products(category_id);
 
 -- =============================================
 -- ROW LEVEL SECURITY (RLS) POLICIES
@@ -153,9 +105,6 @@ CREATE INDEX IF NOT EXISTS idx_products_category ON public.products(category_id)
 
 -- Enable RLS on all tables
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.brands ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.invoices ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.invoice_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.company_settings ENABLE ROW LEVEL SECURITY;
@@ -163,33 +112,6 @@ ALTER TABLE public.company_settings ENABLE ROW LEVEL SECURITY;
 -- Profiles policies
 CREATE POLICY "Users can view all profiles" ON public.profiles FOR SELECT USING (true);
 CREATE POLICY "Users can update own profile" ON public.profiles FOR UPDATE USING (auth.uid() = id);
-
--- Brands policies
-CREATE POLICY "Anyone can view brands" ON public.brands FOR SELECT USING (true);
-CREATE POLICY "Admin can insert brands" ON public.brands FOR INSERT
-    WITH CHECK (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
-CREATE POLICY "Admin can update brands" ON public.brands FOR UPDATE
-    USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
-CREATE POLICY "Admin can delete brands" ON public.brands FOR DELETE
-    USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
-
--- Categories policies
-CREATE POLICY "Anyone can view categories" ON public.categories FOR SELECT USING (true);
-CREATE POLICY "Admin can insert categories" ON public.categories FOR INSERT
-    WITH CHECK (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
-CREATE POLICY "Admin can update categories" ON public.categories FOR UPDATE
-    USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
-CREATE POLICY "Admin can delete categories" ON public.categories FOR DELETE
-    USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
-
--- Products policies
-CREATE POLICY "Anyone can view products" ON public.products FOR SELECT USING (true);
-CREATE POLICY "Admin can insert products" ON public.products FOR INSERT
-    WITH CHECK (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
-CREATE POLICY "Admin can update products" ON public.products FOR UPDATE
-    USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
-CREATE POLICY "Admin can delete products" ON public.products FOR DELETE
-    USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
 
 -- Invoices policies
 CREATE POLICY "Users can view own invoices" ON public.invoices FOR SELECT
@@ -235,21 +157,6 @@ CREATE POLICY "Admin can insert company settings" ON public.company_settings FOR
     WITH CHECK (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
 
 -- =============================================
--- STORAGE BUCKET FOR PRODUCT IMAGES
--- =============================================
--- Note: Run this in the Supabase Dashboard SQL Editor or use the Supabase Storage UI
--- INSERT INTO storage.buckets (id, name, public) VALUES ('products', 'products', true);
-
--- Storage policies (run in Supabase Dashboard)
--- CREATE POLICY "Public read access for product images" ON storage.objects FOR SELECT USING (bucket_id = 'products');
--- CREATE POLICY "Admin can upload product images" ON storage.objects FOR INSERT WITH CHECK (
---     bucket_id = 'products' AND EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
--- );
--- CREATE POLICY "Admin can delete product images" ON storage.objects FOR DELETE USING (
---     bucket_id = 'products' AND EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
--- );
-
--- =============================================
 -- FUNCTIONS AND TRIGGERS
 -- =============================================
 
@@ -285,18 +192,6 @@ $$ LANGUAGE plpgsql;
 
 DROP TRIGGER IF EXISTS update_profiles_updated_at ON public.profiles;
 CREATE TRIGGER update_profiles_updated_at BEFORE UPDATE ON public.profiles
-    FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-
-DROP TRIGGER IF EXISTS update_brands_updated_at ON public.brands;
-CREATE TRIGGER update_brands_updated_at BEFORE UPDATE ON public.brands
-    FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-
-DROP TRIGGER IF EXISTS update_categories_updated_at ON public.categories;
-CREATE TRIGGER update_categories_updated_at BEFORE UPDATE ON public.categories
-    FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
-
-DROP TRIGGER IF EXISTS update_products_updated_at ON public.products;
-CREATE TRIGGER update_products_updated_at BEFORE UPDATE ON public.products
     FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
 DROP TRIGGER IF EXISTS update_invoices_updated_at ON public.invoices;

@@ -5,9 +5,6 @@ import { cn } from '@/lib/utils'
 import {
   LayoutDashboard,
   FileText,
-  Package,
-  Tags,
-  FolderTree,
   Hash,
   Users,
   BarChart3,
@@ -32,36 +29,17 @@ const menuItems = [
     adminOnly: false,
   },
   {
-    title: 'HSN Codes',
-    href: '/dashboard/hsn-codes',
-    icon: Hash,
-    adminOnly: true,
-  },
-  {
     title: 'Invoices',
     href: '/dashboard/invoices',
     icon: FileText,
     adminOnly: false,
   },
   {
-    title: 'Products',
-    href: '/dashboard/products',
-    icon: Package,
+    title: 'HSN Codes',
+    href: '/dashboard/hsn-codes',
+    icon: Hash,
     adminOnly: true,
   },
-  {
-    title: 'Brands',
-    href: '/dashboard/brands',
-    icon: Tags,
-    adminOnly: true,
-  },
-  {
-    title: 'Categories',
-    href: '/dashboard/categories',
-    icon: FolderTree,
-    adminOnly: true,
-  },
-  
   {
     title: 'Users',
     href: '/dashboard/users',

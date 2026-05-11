@@ -1,36 +1,27 @@
 import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { FileText, Package, DollarSign, AlertTriangle } from 'lucide-react'
+import { FileText, Hash, DollarSign } from 'lucide-react'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
 
-  // Fetch dashboard stats
-  const [invoicesResult, productsResult, lowStockResult] = await Promise.all([
+  const [invoicesResult, hsnResult] = await Promise.all([
     supabase
       .from('invoices')
       .select('grand_total, paid_amount', { count: 'exact' })
       .eq('is_deleted', false),
     supabase
-      .from('products')
-      .select('id', { count: 'exact' })
+      .from('hsn_catalog')
+      .select('id', { count: 'exact', head: true })
       .eq('is_deleted', false),
-    supabase
-      .from('products')
-      .select('id, name, quantity', { count: 'exact' })
-      .eq('is_deleted', false)
-      .lte('quantity', 3),
   ])
 
   const totalInvoices = invoicesResult.count || 0
-  const totalProducts = productsResult.count || 0
-  const lowStockCount = lowStockResult.count || 0
-  const lowStockProducts = lowStockResult.data || []
+  const totalHsnCodes = hsnResult.count || 0
 
-  const totalRevenue = invoicesResult.data?.reduce(
-    (sum, inv) => sum + (inv.grand_total || 0),
+  const totalRevenue =
+    invoicesResult.data?.reduce((sum, inv) => sum + (inv.grand_total || 0), 0) ||
     0
-  ) || 0
 
   const stats = [
     {
@@ -41,9 +32,9 @@ export default async function DashboardPage() {
       bgColor: 'bg-blue-500/10',
     },
     {
-      title: 'Total Products',
-      value: totalProducts.toString(),
-      icon: Package,
+      title: 'Total HSN Codes',
+      value: totalHsnCodes.toString(),
+      icon: Hash,
       color: 'text-green-500',
       bgColor: 'bg-green-500/10',
     },
@@ -53,13 +44,6 @@ export default async function DashboardPage() {
       icon: DollarSign,
       color: 'text-purple-500',
       bgColor: 'bg-purple-500/10',
-    },
-    {
-      title: 'Low Stock Items',
-      value: lowStockCount.toString(),
-      icon: AlertTriangle,
-      color: 'text-red-500',
-      bgColor: 'bg-red-500/10',
     },
   ]
 
@@ -72,7 +56,7 @@ export default async function DashboardPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 md:gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {stats.map((stat) => (
           <Card key={stat.title}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1 md:p-6 md:pb-2">
@@ -87,32 +71,6 @@ export default async function DashboardPage() {
           </Card>
         ))}
       </div>
-
-      {lowStockProducts.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-red-500">
-              <AlertTriangle className="h-5 w-5" />
-              Low Stock Alert
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {lowStockProducts.map((product) => (
-                <div
-                  key={product.id}
-                  className="flex items-center justify-between rounded-lg border p-3"
-                >
-                  <span className="font-medium">{product.name}</span>
-                  <span className="text-sm text-muted-foreground">
-                    Quantity: {product.quantity}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   )
 }

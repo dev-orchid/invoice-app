@@ -46,14 +46,14 @@ export function DashboardShell({ children, user }: DashboardShellProps) {
           <NavigationLoader />
         </main>
         <footer className="shrink-0 border-t bg-card py-3 px-4 text-center text-sm text-muted-foreground">
-          Copyright © 2025{' '}
+          Copyright © 2026{' '}
           <a
             href="https://orchidsw.com"
             target="_blank"
             rel="noopener noreferrer"
             className="hover:text-primary transition-colors"
           >
-            Orchid Software
+            Komplex Studio
           </a>
           . All rights reserved.
         </footer>
