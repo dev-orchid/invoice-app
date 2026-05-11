@@ -45,6 +45,7 @@ const ITEMS_PER_PAGE = 25
 export function InvoicesList({ invoices }: InvoicesListProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [monthFilter, setMonthFilter] = useState<string>('')
   const [currentPage, setCurrentPage] = useState(1)
 
   const filteredInvoices = useMemo(() => {
@@ -58,14 +59,17 @@ export function InvoicesList({ invoices }: InvoicesListProps) {
       const matchesStatus =
         statusFilter === 'all' || invoice.payment_status === statusFilter
 
-      return matchesSearch && matchesStatus
+      const matchesMonth =
+        !monthFilter || invoice.invoice_date.slice(0, 7) === monthFilter
+
+      return matchesSearch && matchesStatus && matchesMonth
     })
-  }, [invoices, searchQuery, statusFilter])
+  }, [invoices, searchQuery, statusFilter, monthFilter])
 
   // Reset to page 1 when filters change
   useMemo(() => {
     setCurrentPage(1)
-  }, [searchQuery, statusFilter])
+  }, [searchQuery, statusFilter, monthFilter])
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredInvoices.length / ITEMS_PER_PAGE)
@@ -87,10 +91,11 @@ export function InvoicesList({ invoices }: InvoicesListProps) {
   const clearFilters = () => {
     setSearchQuery('')
     setStatusFilter('all')
+    setMonthFilter('')
     setCurrentPage(1)
   }
 
-  const hasFilters = searchQuery || statusFilter !== 'all'
+  const hasFilters = searchQuery || statusFilter !== 'all' || monthFilter
 
   const goToPage = (page: number) => {
     setCurrentPage(Math.max(1, Math.min(page, totalPages)))
@@ -109,6 +114,13 @@ export function InvoicesList({ invoices }: InvoicesListProps) {
             className="pl-9"
           />
         </div>
+        <Input
+          type="month"
+          value={monthFilter}
+          onChange={(e) => setMonthFilter(e.target.value)}
+          className="w-full sm:w-[170px]"
+          aria-label="Filter by month"
+        />
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-full sm:w-[150px]">
             <SelectValue placeholder="Status" />
