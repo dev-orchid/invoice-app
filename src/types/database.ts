@@ -246,6 +246,7 @@ export type Database = {
           id: string
           invoice_id: string
           product_name: string
+          description: string | null
           hsn_code: string | null
           rate: number
           quantity: number
@@ -258,6 +259,7 @@ export type Database = {
           id?: string
           invoice_id: string
           product_name: string
+          description?: string | null
           hsn_code?: string | null
           rate: number
           quantity: number
@@ -270,6 +272,7 @@ export type Database = {
           id?: string
           invoice_id?: string
           product_name?: string
+          description?: string | null
           hsn_code?: string | null
           rate?: number
           quantity?: number

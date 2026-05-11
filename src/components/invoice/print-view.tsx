@@ -35,6 +35,7 @@ function numberToWords(num: number): string {
 interface InvoiceItem {
   id: string
   product_name: string
+  description: string | null
   hsn_code: string | null
   rate: number
   quantity: number
@@ -294,7 +295,12 @@ export function PrintView({ invoice, companySettings }: PrintViewProps) {
                 .map((item, index) => (
                   <tr key={item.id} className="border-b border-gray-400">
                     <td className="p-1.5 text-center border-r border-gray-400">{index + 1}</td>
-                    <td className="p-1.5 border-r border-gray-400">{item.product_name}</td>
+                    <td className="p-1.5 border-r border-gray-400">
+                      {item.product_name}
+                      {item.description && (
+                        <p className="text-[8px] text-gray-500 mt-0.5">{item.description}</p>
+                      )}
+                    </td>
                     <td className="p-1.5 text-center border-r border-gray-400">{item.hsn_code || ''}</td>
                     <td className="p-1.5 text-right border-r border-gray-400">{item.quantity.toFixed(2)}</td>
                     <td className="p-1.5 text-right border-r border-gray-400">{item.rate.toFixed(2)}</td>
@@ -529,7 +535,12 @@ export function PrintView({ invoice, companySettings }: PrintViewProps) {
                   .map((item) => (
                     <tr key={item.id}>
                       <td className="p-2">{item.hsn_code || '-'}</td>
-                      <td className="p-2">{item.product_name}</td>
+                      <td className="p-2">
+                        {item.product_name}
+                        {item.description && (
+                          <p className="text-xs text-gray-500 mt-0.5">{item.description}</p>
+                        )}
+                      </td>
                       <td className="p-2 text-right">{item.quantity} {item.unit}</td>
                       <td className="p-2 text-right">{item.total.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
                       <td className="p-2 text-right">18</td>

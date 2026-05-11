@@ -54,6 +54,7 @@ interface InvoiceFormProps {
     payment_terms: string | null
     invoice_items: Array<{
       product_name: string
+      description: string | null
       hsn_code: string | null
       rate: number
       quantity: number
@@ -112,6 +113,7 @@ export function InvoiceForm({ initialData, nextInvoiceNumber }: InvoiceFormProps
           payment_terms: initialData.payment_terms || '',
           items: initialData.invoice_items.map((item) => ({
             product_name: item.product_name,
+            description: item.description || '',
             hsn_code: item.hsn_code || '',
             rate: item.rate,
             quantity: item.quantity,
@@ -138,7 +140,7 @@ export function InvoiceForm({ initialData, nextInvoiceNumber }: InvoiceFormProps
           destination: '',
           terms_of_delivery: '',
           payment_terms: '',
-          items: [{ product_name: '', hsn_code: '', rate: 0, quantity: 1, unit: 'KGS' }],
+          items: [{ product_name: '', description: '', hsn_code: '', rate: 0, quantity: 1, unit: 'KGS' }],
         },
   })
 
@@ -271,6 +273,14 @@ export function InvoiceForm({ initialData, nextInvoiceNumber }: InvoiceFormProps
                     </div>
 
                     <div>
+                      <Label className="text-xs text-muted-foreground mb-1 block">Description</Label>
+                      <Input
+                        {...form.register(`items.${index}.description`)}
+                        placeholder="Enter description (optional)"
+                      />
+                    </div>
+
+                    <div>
                       <Label className="text-xs text-muted-foreground mb-1 block">HSN/SAC Code</Label>
                       <Input
                         {...form.register(`items.${index}.hsn_code`)}
@@ -338,17 +348,22 @@ export function InvoiceForm({ initialData, nextInvoiceNumber }: InvoiceFormProps
                 <TableBody>
                   {fields.map((field, index) => (
                     <TableRow key={field.id}>
-                      <TableCell className="font-medium text-muted-foreground">
+                      <TableCell className="font-medium text-muted-foreground align-top pt-4">
                         {index + 1}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="align-top whitespace-normal">
                         <Input
                           {...form.register(`items.${index}.product_name`)}
                           placeholder="Product name"
                           className="h-9"
                         />
+                        <Input
+                          {...form.register(`items.${index}.description`)}
+                          placeholder="Description (optional)"
+                          className="h-7 mt-1 text-xs text-muted-foreground"
+                        />
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="align-top">
                         <Input
                           {...form.register(`items.${index}.hsn_code`)}
                           placeholder="HSN"
@@ -356,7 +371,7 @@ export function InvoiceForm({ initialData, nextInvoiceNumber }: InvoiceFormProps
                           autoComplete="off"
                         />
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="align-top">
                         <Input
                           type="number"
                           step="0.01"
@@ -366,7 +381,7 @@ export function InvoiceForm({ initialData, nextInvoiceNumber }: InvoiceFormProps
                           className="h-9"
                         />
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="align-top">
                         <Input
                           type="number"
                           step="0.01"
@@ -376,17 +391,17 @@ export function InvoiceForm({ initialData, nextInvoiceNumber }: InvoiceFormProps
                           className="h-9"
                         />
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="align-top">
                         <Input
                           {...form.register(`items.${index}.unit`)}
                           placeholder="KGS"
                           className="h-9"
                         />
                       </TableCell>
-                      <TableCell className="text-right font-medium">
+                      <TableCell className="text-right font-medium align-top pt-4">
                         Rs. {((watchItems[index]?.rate || 0) * (watchItems[index]?.quantity || 0)).toFixed(2)}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="align-top">
                         <Button
                           type="button"
                           variant="ghost"
@@ -410,7 +425,7 @@ export function InvoiceForm({ initialData, nextInvoiceNumber }: InvoiceFormProps
             variant="outline"
             className="w-full"
             onClick={() =>
-              append({ product_name: '', hsn_code: '', rate: 0, quantity: 1, unit: 'KGS' })
+              append({ product_name: '', description: '', hsn_code: '', rate: 0, quantity: 1, unit: 'KGS' })
             }
           >
             <Plus className="mr-2 h-4 w-4" /> Add Item

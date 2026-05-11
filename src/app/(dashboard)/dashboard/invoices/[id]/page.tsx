@@ -151,10 +151,15 @@ export default async function ViewInvoicePage({
             <tbody>
               {invoice.invoice_items
                 .sort((a: { sort_order: number }, b: { sort_order: number }) => a.sort_order - b.sort_order)
-                .map((item: { id: string; product_name: string; hsn_code: string | null; rate: number; quantity: number; unit: string; total: number }, index: number) => (
+                .map((item: { id: string; product_name: string; description: string | null; hsn_code: string | null; rate: number; quantity: number; unit: string; total: number }, index: number) => (
                   <tr key={item.id} className="border-b">
                     <td className="p-3">{index + 1}</td>
-                    <td className="p-3 font-medium">{item.product_name}</td>
+                    <td className="p-3">
+                      <span className="font-medium">{item.product_name}</span>
+                      {item.description && (
+                        <p className="text-xs text-muted-foreground mt-0.5">{item.description}</p>
+                      )}
+                    </td>
                     <td className="p-3">{item.hsn_code || '-'}</td>
                     <td className="p-3 text-right">Rs. {item.rate.toFixed(2)}</td>
                     <td className="p-3 text-right">{item.quantity}</td>
