@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useLinkStatus } from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import {
@@ -15,6 +16,8 @@ import {
   Settings,
   LogOut,
   X,
+  Loader2,
+  type LucideIcon,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/supabase/client'
@@ -25,12 +28,34 @@ interface SidebarProps {
   onClose?: () => void
 }
 
+// Renders the nav item's icon, swapping to a spinner while the link's
+// navigation is pending. Must live inside <Link> for useLinkStatus to work.
+function NavItemContent({ icon: Icon, title }: { icon: LucideIcon; title: string }) {
+  const { pending } = useLinkStatus()
+  return (
+    <>
+      {pending ? (
+        <Loader2 className="h-4 w-4 animate-spin" />
+      ) : (
+        <Icon className="h-4 w-4" />
+      )}
+      {title}
+    </>
+  )
+}
+
 const menuItems = [
   {
     title: 'Dashboard',
     href: '/dashboard',
     icon: LayoutDashboard,
     adminOnly: false,
+  },
+  {
+    title: 'HSN Codes',
+    href: '/dashboard/hsn-codes',
+    icon: Hash,
+    adminOnly: true,
   },
   {
     title: 'Invoices',
@@ -56,12 +81,7 @@ const menuItems = [
     icon: FolderTree,
     adminOnly: true,
   },
-  {
-    title: 'HSN Codes',
-    href: '/dashboard/hsn-codes',
-    icon: Hash,
-    adminOnly: true,
-  },
+  
   {
     title: 'Users',
     href: '/dashboard/users',
@@ -142,8 +162,7 @@ export function Sidebar({ userRole, onClose }: SidebarProps) {
                   : 'text-muted-foreground hover:bg-muted hover:text-foreground'
               )}
             >
-              <item.icon className="h-4 w-4" />
-              {item.title}
+              <NavItemContent icon={item.icon} title={item.title} />
             </Link>
           )
         })}
