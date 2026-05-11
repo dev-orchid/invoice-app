@@ -6,10 +6,10 @@ import { Loader2 } from 'lucide-react'
 
 // Minimum time the spinner stays on screen once shown. Prevents a jarring
 // flash on fast routes — a too-brief spinner feels like a flicker.
-const MIN_VISIBLE_MS = 450
+const MIN_VISIBLE_MS = 500
 // Delay before showing the spinner. If navigation finishes within this
 // window, we skip the spinner entirely — feels snappier on cached routes.
-const SHOW_DELAY_MS = 120
+const SHOW_DELAY_MS = 60
 
 // Body-area spinner that overlays the main content during route transitions.
 // Triggers on clicks of internal links (including sidebar + in-page buttons)
@@ -61,8 +61,10 @@ export function NavigationLoader() {
     const handleClick = (event: MouseEvent) => {
       // Respect modifier-clicks / non-primary buttons — they don't trigger
       // SPA navigation, the browser handles them itself.
+      // Note: we deliberately do NOT check `event.defaultPrevented` here
+      // because Next.js Link calls preventDefault() to do client-side
+      // navigation, and we still want the spinner in that case.
       if (
-        event.defaultPrevented ||
         event.button !== 0 ||
         event.metaKey ||
         event.ctrlKey ||
