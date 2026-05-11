@@ -146,6 +146,44 @@ export type Database = {
           updated_at?: string
         }
       }
+      hsn_catalog: {
+        Row: {
+          id: string
+          hsn_code: string
+          product_name: string
+          rate: number
+          unit: string
+          is_active: boolean
+          is_deleted: boolean
+          created_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          hsn_code: string
+          product_name: string
+          rate: number
+          unit?: string
+          is_active?: boolean
+          is_deleted?: boolean
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          hsn_code?: string
+          product_name?: string
+          rate?: number
+          unit?: string
+          is_active?: boolean
+          is_deleted?: boolean
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
       invoices: {
         Row: {
           id: string

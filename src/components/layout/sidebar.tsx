@@ -9,6 +9,7 @@ import {
   Package,
   Tags,
   FolderTree,
+  Hash,
   Users,
   BarChart3,
   Settings,
@@ -53,6 +54,12 @@ const menuItems = [
     title: 'Categories',
     href: '/dashboard/categories',
     icon: FolderTree,
+    adminOnly: true,
+  },
+  {
+    title: 'HSN Codes',
+    href: '/dashboard/hsn-codes',
+    icon: Hash,
     adminOnly: true,
   },
   {

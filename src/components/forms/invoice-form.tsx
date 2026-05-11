@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/table'
 import { Trash2, Plus, Loader2, ChevronDown, ChevronRight, Truck } from 'lucide-react'
 import { createInvoice, updateInvoice, getNextInvoiceNumber } from '@/actions/invoices'
+import { lookupByHsnCode } from '@/actions/hsn-catalog'
 import { invoiceSchema, type InvoiceFormData } from '@/lib/validations/invoice'
 import { formatInvoiceNumber } from '@/lib/utils'
 import { toast } from 'sonner'
@@ -155,6 +156,32 @@ export function InvoiceForm({ initialData, nextInvoiceNumber }: InvoiceFormProps
   const watchPaidAmount = form.watch('paid_amount') || 0
   const watchInvoiceNumber = form.watch('invoice_number') || 0
   const watchInvoiceDate = form.watch('invoice_date')
+
+  // When the user enters an HSN code, look it up in the HSN catalog and
+  // auto-fill product name, rate, and unit on the matching line item.
+  // Only fills empty product_name to avoid clobbering existing items on edit.
+  async function autofillFromHsn(index: number, hsnCode: string) {
+    const code = hsnCode.trim()
+    if (!code) return
+    const currentName = form.getValues(`items.${index}.product_name`)
+    if (currentName && currentName.trim() !== '') return
+    try {
+      const matches = await lookupByHsnCode(code)
+      if (matches.length === 0) return
+      if (matches.length > 1) {
+        toast.message(`${matches.length} products share HSN ${code}`, {
+          description: 'Open HSN Codes to pick one, or fill manually.',
+        })
+        return
+      }
+      const m = matches[0]
+      form.setValue(`items.${index}.product_name`, m.product_name, { shouldDirty: true })
+      form.setValue(`items.${index}.rate`, Number(m.rate), { shouldDirty: true })
+      form.setValue(`items.${index}.unit`, m.unit || 'KGS', { shouldDirty: true })
+    } catch (err) {
+      console.error('HSN lookup failed', err)
+    }
+  }
 
   // In create mode, recompute the next number when the user changes the date
   // to a different financial year (so April-onward dates start fresh at 1).
@@ -307,7 +334,9 @@ export function InvoiceForm({ initialData, nextInvoiceNumber }: InvoiceFormProps
                     <div>
                       <Label className="text-xs text-muted-foreground mb-1 block">HSN/SAC Code</Label>
                       <Input
-                        {...form.register(`items.${index}.hsn_code`)}
+                        {...form.register(`items.${index}.hsn_code`, {
+                          onBlur: (e) => autofillFromHsn(index, e.target.value),
+                        })}
                         placeholder="Enter HSN code"
                         autoComplete="off"
                       />
@@ -389,7 +418,9 @@ export function InvoiceForm({ initialData, nextInvoiceNumber }: InvoiceFormProps
                       </TableCell>
                       <TableCell className="align-top">
                         <Input
-                          {...form.register(`items.${index}.hsn_code`)}
+                          {...form.register(`items.${index}.hsn_code`, {
+                            onBlur: (e) => autofillFromHsn(index, e.target.value),
+                          })}
                           placeholder="HSN"
                           className="h-9"
                           autoComplete="off"
